@@ -289,7 +289,8 @@ body {
 .panel-head-title {
   display: flex;
   align-items: center;
-  gap: 6px;
+  flex-wrap: wrap;
+  gap: 2px 6px;
   min-width: 0;
   flex: 1;
 }
@@ -298,9 +299,13 @@ body {
 .counter-text {
   font-size: calc(10px * var(--text-scale));
   color: var(--text-faint);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  /* Its own full-width line under the title, so a long quip wraps instead
+     of truncating — flex-basis: 100% forces the wrap unconditionally
+     (rather than only when it doesn't fit) so the title row's line count
+     doesn't jump around as quips of different lengths cycle through. */
+  flex-basis: 100%;
+  white-space: normal;
+  overflow-wrap: break-word;
 }
 
 /* Info tooltip ("i" in a circle) */

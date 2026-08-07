@@ -2,6 +2,13 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.15.3 — 2026-08-07
+
+- Fixed the Notes quip getting cut off with "..." on longer lines. It now
+  sits on its own full-width line under the title and wraps to a second
+  (or third) line instead of truncating, so the whole quip is always
+  readable even at the narrowest panel width.
+
 ## 1.15.2 — 2026-08-07
 
 - Fixed the Capture hint's wording: it now reads "Paste ↑ or →", spelling
