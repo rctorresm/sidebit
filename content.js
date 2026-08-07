@@ -7,6 +7,17 @@
   let host = null;
   let hideTimer = null;
 
+  // Builds a URL that scrolls straight to the highlighted text when opened,
+  // using the same text-fragment mechanism as Chrome's built-in "Copy link
+  // to highlight". Capped at 300 chars — long fragments just fail to match
+  // and the link still opens the page fine, no error either way.
+  function buildHighlightLink(text) {
+    const clean = text.replace(/\s+/g, " ").trim().slice(0, 300);
+    const base = location.href.split("#")[0];
+    if (!clean) return base;
+    return `${base}#:~:text=${encodeURIComponent(clean)}`;
+  }
+
   function removePill() {
     if (host) {
       host.remove();
@@ -78,7 +89,8 @@
           type: "SAVE_HIGHLIGHT",
           text,
           source: location.hostname,
-          title: document.title
+          title: document.title,
+          url: buildHighlightLink(text)
         },
         () => {
           pill.classList.add("saved");

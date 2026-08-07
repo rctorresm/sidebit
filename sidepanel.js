@@ -1,8 +1,10 @@
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-let state = { tabs: [], activeTabId: null, snippets: [] };
+let state = { tabs: [], activeTabId: null, snippets: [], settings: { theme: "dark", backgroundImage: null } };
 let editingSnippets = false;
 let notesSaveTimer = null;
+let dragSrcId = null;
+let systemThemeQuery = null;
 
 const el = {
   tabsRow: document.getElementById("tabsRow"),
@@ -15,7 +17,16 @@ const el = {
   addSnippetBtn: document.getElementById("addSnippetBtn"),
   highlightsList: document.getElementById("highlightsList"),
   notesArea: document.getElementById("notesArea"),
-  saveIndicator: document.getElementById("saveIndicator")
+  saveIndicator: document.getElementById("saveIndicator"),
+  settingsBtn: document.getElementById("settingsBtn"),
+  settingsModal: document.getElementById("settingsModal"),
+  closeSettingsBtn: document.getElementById("closeSettingsBtn"),
+  themeChoices: document.getElementById("themeChoices"),
+  bgBackdrop: document.getElementById("bgBackdrop"),
+  bgPreview: document.getElementById("bgPreview"),
+  bgFileInput: document.getElementById("bgFileInput"),
+  removeBgBtn: document.getElementById("removeBgBtn"),
+  bgStatus: document.getElementById("bgStatus")
 };
 
 function activeTab() {
@@ -28,11 +39,14 @@ async function persist(partial) {
 }
 
 async function loadState() {
-  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets"]);
+  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets", "settings"]);
   state.tabs = data.tabs || [];
   state.activeTabId = data.activeTabId || (state.tabs[0] && state.tabs[0].id) || null;
   state.snippets = data.snippets || [];
+  state.settings = Object.assign({ theme: "dark", backgroundImage: null }, data.settings || {});
   renderAll();
+  applyTheme(state.settings.theme);
+  applyBackground(state.settings.backgroundImage);
 }
 
 // Re-render if data changes elsewhere (a highlight saved from a page,
@@ -42,6 +56,12 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.tabs) state.tabs = changes.tabs.newValue || [];
   if (changes.activeTabId) state.activeTabId = changes.activeTabId.newValue;
   if (changes.snippets) state.snippets = changes.snippets.newValue || [];
+  if (changes.settings) {
+    state.settings = Object.assign({ theme: "dark", backgroundImage: null }, changes.settings.newValue || {});
+    applyTheme(state.settings.theme);
+    applyBackground(state.settings.backgroundImage);
+    renderSettingsUI();
+  }
   renderAll();
 });
 
@@ -50,6 +70,147 @@ function renderAll() {
   renderSnippets();
   renderHighlights();
   renderNotes();
+  renderSettingsUI();
+}
+
+/* ---------------- Settings: theme + background image ---------------- */
+
+function applyTheme(theme) {
+  const root = document.documentElement;
+
+  if (systemThemeQuery) {
+    systemThemeQuery.removeEventListener("change", handleSystemThemeChange);
+    systemThemeQuery = null;
+  }
+
+  if (theme === "system") {
+    systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");
+    systemThemeQuery.addEventListener("change", handleSystemThemeChange);
+    root.dataset.theme = systemThemeQuery.matches ? "light" : "dark";
+  } else {
+    root.dataset.theme = theme === "light" ? "light" : "dark";
+  }
+}
+
+function handleSystemThemeChange(e) {
+  document.documentElement.dataset.theme = e.matches ? "light" : "dark";
+}
+
+function applyBackground(dataUrl) {
+  if (dataUrl) {
+    el.bgBackdrop.style.backgroundImage = `url("${dataUrl}")`;
+    document.body.classList.add("has-bg-image");
+  } else {
+    el.bgBackdrop.style.backgroundImage = "";
+    document.body.classList.remove("has-bg-image");
+  }
+}
+
+function renderSettingsUI() {
+  const theme = state.settings.theme || "dark";
+  [...el.themeChoices.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themeChoice === theme);
+  });
+
+  if (state.settings.backgroundImage) {
+    el.bgPreview.style.backgroundImage = `url("${state.settings.backgroundImage}")`;
+    el.bgPreview.classList.remove("empty");
+    el.bgPreview.textContent = "";
+  } else {
+    el.bgPreview.style.backgroundImage = "";
+    el.bgPreview.classList.add("empty");
+  }
+}
+
+el.settingsBtn.addEventListener("click", () => el.settingsModal.classList.remove("hidden"));
+el.closeSettingsBtn.addEventListener("click", () => el.settingsModal.classList.add("hidden"));
+el.settingsModal.addEventListener("click", e => {
+  if (e.target === el.settingsModal) el.settingsModal.classList.add("hidden");
+});
+
+el.themeChoices.addEventListener("click", async e => {
+  const btn = e.target.closest(".theme-btn");
+  if (!btn) return;
+  const theme = btn.dataset.themeChoice;
+  const settings = { ...state.settings, theme };
+  await persist({ settings });
+  applyTheme(theme);
+  renderSettingsUI();
+});
+
+el.removeBgBtn.addEventListener("click", async () => {
+  const settings = { ...state.settings, backgroundImage: null };
+  await persist({ settings });
+  applyBackground(null);
+  renderSettingsUI();
+  el.bgStatus.textContent = "";
+  el.bgFileInput.value = "";
+});
+
+el.bgFileInput.addEventListener("change", async () => {
+  const file = el.bgFileInput.files && el.bgFileInput.files[0];
+  if (!file) return;
+  if (!file.type.startsWith("image/")) {
+    el.bgStatus.textContent = "That file isn't an image.";
+    el.bgStatus.classList.add("error");
+    return;
+  }
+  el.bgStatus.classList.remove("error");
+  el.bgStatus.textContent = "Processing...";
+  try {
+    const dataUrl = await compressImageFile(file, 1600, 0.82);
+    const settings = { ...state.settings, backgroundImage: dataUrl };
+    await persist({ settings });
+    applyBackground(dataUrl);
+    renderSettingsUI();
+    el.bgStatus.textContent = "Background updated.";
+    setTimeout(() => { el.bgStatus.textContent = ""; }, 1800);
+  } catch (err) {
+    el.bgStatus.textContent = err && err.message ? err.message : "Couldn't set that image.";
+    el.bgStatus.classList.add("error");
+  } finally {
+    el.bgFileInput.value = "";
+  }
+});
+
+// Resizes/compresses to a JPEG data URL, backing off quality if the result
+// is still too big for comfortable chrome.storage.local usage.
+function compressImageFile(file, maxDimension, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.onload = () => {
+      const img = new Image();
+      img.onerror = () => reject(new Error("Couldn't read that image."));
+      img.onload = () => {
+        let { width, height } = img;
+        if (width > maxDimension || height > maxDimension) {
+          const scale = maxDimension / Math.max(width, height);
+          width = Math.round(width * scale);
+          height = Math.round(height * scale);
+        }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, width, height);
+
+        let q = quality;
+        let dataUrl = canvas.toDataURL("image/jpeg", q);
+        while (dataUrl.length > 2_000_000 && q > 0.4) {
+          q -= 0.15;
+          dataUrl = canvas.toDataURL("image/jpeg", q);
+        }
+        if (dataUrl.length > 2_000_000) {
+          reject(new Error("Image is too large even after compression — try a smaller one."));
+          return;
+        }
+        resolve(dataUrl);
+      };
+      img.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
 }
 
 /* ---------------- Tabs ---------------- */
@@ -157,6 +318,44 @@ function renderSnippets() {
     row.className = "snippet-row" + (editingSnippets ? " edit-mode" : "");
 
     if (editingSnippets) {
+      const handle = document.createElement("span");
+      handle.className = "drag-handle";
+      handle.title = "Drag to reorder";
+      handle.draggable = true;
+      handle.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`;
+
+      handle.addEventListener("dragstart", e => {
+        dragSrcId = snippet.id;
+        row.classList.add("dragging");
+        e.dataTransfer.effectAllowed = "move";
+      });
+      handle.addEventListener("dragend", () => {
+        row.classList.remove("dragging");
+        [...el.snippetsList.children].forEach(r => r.classList.remove("drag-over"));
+        dragSrcId = null;
+      });
+      row.addEventListener("dragover", e => {
+        if (!dragSrcId || dragSrcId === snippet.id) return;
+        e.preventDefault();
+        row.classList.add("drag-over");
+      });
+      row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+      row.addEventListener("drop", async e => {
+        e.preventDefault();
+        row.classList.remove("drag-over");
+        if (!dragSrcId || dragSrcId === snippet.id) return;
+        const from = state.snippets.findIndex(s => s.id === dragSrcId);
+        const to = state.snippets.findIndex(s => s.id === snippet.id);
+        if (from === -1 || to === -1) return;
+        const reordered = [...state.snippets];
+        const [moved] = reordered.splice(from, 1);
+        reordered.splice(to, 0, moved);
+        await persist({ snippets: reordered });
+        renderSnippets();
+      });
+
+      row.appendChild(handle);
+
       const labelInput = document.createElement("input");
       labelInput.className = "snippet-label-input";
       labelInput.value = snippet.label;
@@ -278,10 +477,15 @@ function renderHighlights() {
     const meta = document.createElement("div");
     meta.className = "highlight-meta";
 
-    const source = document.createElement("span");
+    const source = document.createElement(h.url ? "a" : "span");
     source.className = "highlight-source";
     source.textContent = h.source || "";
     source.title = h.title || "";
+    if (h.url) {
+      source.href = h.url;
+      source.target = "_blank";
+      source.rel = "noopener noreferrer";
+    }
 
     const actions = document.createElement("div");
     actions.className = "highlight-actions";

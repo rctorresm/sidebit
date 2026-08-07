@@ -12,7 +12,7 @@ function defaultTab(n) {
 // First install: seed with one example tab and one example snippet so the
 // panel isn't blank, but everything is editable/removable immediately.
 chrome.runtime.onInstalled.addListener(async () => {
-  const existing = await chrome.storage.local.get(["tabs", "snippets", "activeTabId"]);
+  const existing = await chrome.storage.local.get(["tabs", "snippets", "activeTabId", "settings"]);
   if (!existing.tabs || existing.tabs.length === 0) {
     const firstTab = defaultTab(1);
     await chrome.storage.local.set({
@@ -25,6 +25,9 @@ chrome.runtime.onInstalled.addListener(async () => {
             { id: uid(), label: "Documents team email", value: "documents@example.com" }
           ]
     });
+  }
+  if (!existing.settings) {
+    await chrome.storage.local.set({ settings: { theme: "dark", backgroundImage: null } });
   }
 });
 
@@ -56,6 +59,7 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
               text: message.text,
               source: message.source || "",
               title: message.title || "",
+              url: message.url || "",
               time: Date.now()
             },
             ...t.highlights

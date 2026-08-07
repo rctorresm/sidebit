@@ -14,6 +14,24 @@
   --danger: #e05d5d;
   --radius: 8px;
   --radius-lg: 12px;
+  --overlay: rgba(0, 0, 0, 0.5);
+}
+
+:root[data-theme="light"] {
+  --bg: #f2f3f5;
+  --surface: #ffffff;
+  --surface-2: #f5f6f8;
+  --border: #dde0e5;
+  --border-strong: #c7cbd3;
+  --text: #1b1e24;
+  --text-dim: #565c68;
+  --text-faint: #868c98;
+  --accent: #2563eb;
+  --accent-dim: #a9c4f5;
+  --success: #0e9f6e;
+  --success-bg: #e6f9f1;
+  --danger: #d0403f;
+  --overlay: rgba(255, 255, 255, 0.6);
 }
 
 * { box-sizing: border-box; }
@@ -31,6 +49,32 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative;
+}
+
+/* Custom background image: fixed layer behind everything, always covers
+   the current panel size no matter how it's resized. Panels stay on their
+   opaque --surface color so text remains readable over any image. */
+.bg-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  display: none;
+}
+body.has-bg-image {
+  background: transparent;
+}
+body.has-bg-image .bg-backdrop {
+  display: block;
+}
+body.has-bg-image .bg-backdrop::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--overlay);
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -41,6 +85,9 @@ body {
 .app-header {
   padding: 12px 14px 8px;
   flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
 .brand {
   display: flex;
@@ -198,6 +245,22 @@ body {
 }
 .snippet-row.edit-mode .snippet-label-input { flex: 1; min-width: 90px; }
 .snippet-row.edit-mode .snippet-value-input { flex: 1.4; min-width: 110px; }
+
+.drag-handle {
+  flex: none;
+  cursor: grab;
+  color: var(--text-faint);
+  display: flex;
+  align-items: center;
+  padding: 2px;
+  touch-action: none;
+}
+.drag-handle:hover { color: var(--text-dim); }
+.drag-handle svg { width: 14px; height: 14px; }
+.snippet-row.edit-mode.dragging { opacity: 0.4; }
+.snippet-row.edit-mode.drag-over {
+  border-top: 2px solid var(--accent);
+}
 .delete-btn {
   flex: none;
   background: none;
@@ -268,6 +331,11 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none;
+}
+a.highlight-source:hover {
+  color: var(--accent);
+  text-decoration: underline;
 }
 .highlight-actions { display: flex; gap: 4px; flex: none; }
 
@@ -301,3 +369,103 @@ body {
 }
 #notesArea:focus { border-color: var(--accent-dim); }
 #notesArea::placeholder { color: var(--text-faint); }
+
+/* Settings modal */
+.hidden { display: none !important; }
+
+.settings-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 40px 14px;
+}
+.settings-card {
+  width: 100%;
+  max-width: 340px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.settings-card .panel-head { margin-bottom: 12px; }
+.settings-card .panel-head h2 {
+  font-size: 13px;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+  font-weight: 700;
+}
+.settings-section { margin-bottom: 16px; }
+.settings-section:last-child { margin-bottom: 0; }
+.settings-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-faint);
+  margin-bottom: 8px;
+}
+
+.theme-choices { display: flex; gap: 6px; }
+.theme-btn {
+  flex: 1;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 7px 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+}
+.theme-btn:hover { color: var(--text); }
+.theme-btn.active {
+  color: var(--text);
+  border-color: var(--accent);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+
+.bg-preview-row { display: flex; align-items: center; gap: 10px; }
+.bg-preview {
+  width: 56px;
+  height: 56px;
+  flex: none;
+  border-radius: 8px;
+  border: 1px solid var(--border-strong);
+  background-size: cover;
+  background-position: center;
+  background-color: var(--surface-2);
+}
+.bg-preview.empty {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.bg-preview-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  align-items: flex-start;
+}
+.file-btn {
+  display: inline-block;
+  cursor: pointer;
+}
+.secondary-btn {
+  background: none;
+  color: var(--text-dim);
+  border: 1px solid var(--border-strong);
+}
+.secondary-btn:hover { color: var(--text); border-color: var(--danger); }
+.bg-status {
+  margin-top: 8px;
+  font-size: 11px;
+  color: var(--text-faint);
+  min-height: 14px;
+}
+.bg-status.error { color: var(--danger); }
