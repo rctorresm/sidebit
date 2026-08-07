@@ -24,8 +24,7 @@ chrome.runtime.onInstalled.addListener(async details => {
   if (!existing.settings) {
     await chrome.storage.local.set({
       settings: {
-        theme: "dark",
-        backgroundImage: null,
+        theme: "light",
         font: "system",
         textSize: "medium",
         quickCopyCollapsed: false,

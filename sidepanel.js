@@ -5,7 +5,7 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
-const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false };
+const DEFAULT_SETTINGS = { theme: "light", font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false };
 
 // Three self-contained, universally pre-installed fonts chosen for on-screen
 // readability — no bundled font files, no CSP/network concerns.
@@ -54,11 +54,6 @@ const el = {
   themeChoices: document.getElementById("themeChoices"),
   sizeChoices: document.getElementById("sizeChoices"),
   fontChoices: document.getElementById("fontChoices"),
-  bgBackdrop: document.getElementById("bgBackdrop"),
-  bgPreview: document.getElementById("bgPreview"),
-  bgFileInput: document.getElementById("bgFileInput"),
-  removeBgBtn: document.getElementById("removeBgBtn"),
-  bgStatus: document.getElementById("bgStatus"),
   exportDataBtn: document.getElementById("exportDataBtn"),
   importDataInput: document.getElementById("importDataInput"),
   backupStatus: document.getElementById("backupStatus"),
@@ -99,7 +94,6 @@ async function loadState() {
   state.trash = data.trash || [];
   renderAll();
   applyTheme(state.settings.theme);
-  applyBackground(state.settings.backgroundImage);
   applyFont(state.settings.font);
   applyTextScale(state.settings.textSize);
 }
@@ -115,7 +109,6 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.settings) {
     state.settings = Object.assign({ ...DEFAULT_SETTINGS }, changes.settings.newValue || {});
     applyTheme(state.settings.theme);
-    applyBackground(state.settings.backgroundImage);
     applyFont(state.settings.font);
     applyTextScale(state.settings.textSize);
     renderSettingsUI();
@@ -324,18 +317,8 @@ function applyTextScale(sizeKey) {
   document.documentElement.style.setProperty("--text-scale", scale);
 }
 
-function applyBackground(dataUrl) {
-  if (dataUrl) {
-    el.bgBackdrop.style.backgroundImage = `url("${dataUrl}")`;
-    document.body.classList.add("has-bg-image");
-  } else {
-    el.bgBackdrop.style.backgroundImage = "";
-    document.body.classList.remove("has-bg-image");
-  }
-}
-
 function renderSettingsUI() {
-  const theme = state.settings.theme || "dark";
+  const theme = state.settings.theme || "light";
   [...el.themeChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.themeChoice === theme);
   });
@@ -349,15 +332,6 @@ function renderSettingsUI() {
   [...el.fontChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.fontChoice === font);
   });
-
-  if (state.settings.backgroundImage) {
-    el.bgPreview.style.backgroundImage = `url("${state.settings.backgroundImage}")`;
-    el.bgPreview.classList.remove("empty");
-    el.bgPreview.textContent = "";
-  } else {
-    el.bgPreview.style.backgroundImage = "";
-    el.bgPreview.classList.add("empty");
-  }
 }
 
 el.settingsBtn.addEventListener("click", () => el.settingsModal.classList.remove("hidden"));
@@ -394,41 +368,6 @@ el.fontChoices.addEventListener("click", async e => {
   await persist({ settings });
   applyFont(font);
   renderSettingsUI();
-});
-
-el.removeBgBtn.addEventListener("click", async () => {
-  const settings = { ...state.settings, backgroundImage: null };
-  await persist({ settings });
-  applyBackground(null);
-  renderSettingsUI();
-  el.bgStatus.textContent = "";
-  el.bgFileInput.value = "";
-});
-
-el.bgFileInput.addEventListener("change", async () => {
-  const file = el.bgFileInput.files && el.bgFileInput.files[0];
-  if (!file) return;
-  if (!file.type.startsWith("image/")) {
-    el.bgStatus.textContent = "That file isn't an image.";
-    el.bgStatus.classList.add("error");
-    return;
-  }
-  el.bgStatus.classList.remove("error");
-  el.bgStatus.textContent = "Processing...";
-  try {
-    const dataUrl = await compressImageFile(file, 1600, 0.82);
-    const settings = { ...state.settings, backgroundImage: dataUrl };
-    await persist({ settings });
-    applyBackground(dataUrl);
-    renderSettingsUI();
-    el.bgStatus.textContent = "Background updated.";
-    setTimeout(() => { el.bgStatus.textContent = ""; }, 1800);
-  } catch (err) {
-    el.bgStatus.textContent = err && err.message ? err.message : "Couldn't set that image.";
-    el.bgStatus.classList.add("error");
-  } finally {
-    el.bgFileInput.value = "";
-  }
 });
 
 el.exportDataBtn.addEventListener("click", () => {
@@ -498,7 +437,6 @@ el.importDataInput.addEventListener("change", async () => {
 
     await persist({ tabs, activeTabId, snippets, settings, trash });
     applyTheme(settings.theme);
-    applyBackground(settings.backgroundImage);
     applyFont(settings.font);
     applyTextScale(settings.textSize);
     renderAll();
@@ -513,39 +451,27 @@ el.importDataInput.addEventListener("change", async () => {
   }
 });
 
-// Resizes/compresses to a JPEG data URL, backing off quality if the result
-// is still too big for comfortable chrome.storage.local usage.
-function compressImageFile(file, maxDimension, quality) {
+// Reads an image file (from a paste event) as a data URL. Only touches a
+// canvas — losing the PNG's lossless quality — if it's actually oversized;
+// a normal-sized snip passes through untouched at its original quality.
+function readScreenshotFile(file, maxDimension) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Couldn't read that file."));
+    reader.onerror = () => reject(new Error("Couldn't read that image."));
     reader.onload = () => {
       const img = new Image();
       img.onerror = () => reject(new Error("Couldn't read that image."));
       img.onload = () => {
-        let { width, height } = img;
-        if (width > maxDimension || height > maxDimension) {
-          const scale = maxDimension / Math.max(width, height);
-          width = Math.round(width * scale);
-          height = Math.round(height * scale);
-        }
-        const canvas = document.createElement("canvas");
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext("2d");
-        ctx.drawImage(img, 0, 0, width, height);
-
-        let q = quality;
-        let dataUrl = canvas.toDataURL("image/jpeg", q);
-        while (dataUrl.length > 2_000_000 && q > 0.4) {
-          q -= 0.15;
-          dataUrl = canvas.toDataURL("image/jpeg", q);
-        }
-        if (dataUrl.length > 2_000_000) {
-          reject(new Error("Image is too large even after compression — try a smaller one."));
+        if (img.width <= maxDimension && img.height <= maxDimension) {
+          resolve(reader.result);
           return;
         }
-        resolve(dataUrl);
+        const scale = maxDimension / Math.max(img.width, img.height);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL("image/png"));
       };
       img.src = reader.result;
     };
@@ -1091,6 +1017,40 @@ el.notesArea.addEventListener("input", () => {
     el.saveIndicator.classList.add("visible");
     setTimeout(() => el.saveIndicator.classList.remove("visible"), 900);
   }, 400);
+});
+
+// Pasting an image (e.g. from Win+Shift+S or Cmd+Shift+4, copied to the
+// clipboard) into Notes moves it straight to Screenshots instead of
+// dumping broken image data into the text — textareas can't hold images
+// anyway, so intercepting this is the only sane behavior.
+el.notesArea.addEventListener("paste", async e => {
+  const items = e.clipboardData && e.clipboardData.items;
+  if (!items) return;
+  const imageItem = [...items].find(it => it.type && it.type.startsWith("image/"));
+  if (!imageItem) return;
+
+  e.preventDefault();
+  const file = imageItem.getAsFile();
+  if (!file) return;
+  const tab = activeTab();
+  if (!tab) return;
+
+  try {
+    const dataUrl = await readScreenshotFile(file, 1800);
+    const shot = { id: uid(), dataUrl, time: Date.now() };
+    const updatedTabs = state.tabs.map(t =>
+      t.id === tab.id ? { ...t, screenshots: [shot, ...(t.screenshots || [])] } : t
+    );
+    await persist({ tabs: updatedTabs });
+    renderScreenshots();
+    const newThumb = el.screenshotsStrip.querySelector(".screenshot-thumb");
+    if (newThumb) {
+      newThumb.classList.add("just-added");
+      setTimeout(() => newThumb.classList.remove("just-added"), 1200);
+    }
+  } catch (err) {
+    alert(err && err.message ? err.message : "Couldn't add that pasted image.");
+  }
 });
 
 /* ---------------- Screenshots ---------------- */

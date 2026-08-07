@@ -2,6 +2,27 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.14.0 — 2026-08-07
+
+- New defaults for first install: Light theme, Medium text, System font
+  (previously Dark/Medium/System).
+- Removed the background image feature — with opaque panels sitting on
+  top of it, an uploaded photo mostly just got covered, defeating the
+  point. May come back later as purpose-built artwork designed to work
+  with the panel layout instead of a generic photo.
+- Fixed the screenshot Capture button's permission error ("Either the
+  '<all_urls>' or 'activeTab' permission is required"): host_permissions
+  now declares the literal `<all_urls>` pattern — `captureVisibleTab`
+  specifically checks for that exact permission string rather than
+  treating the equivalent `http://*/*` + `https://*/*` wildcards as
+  sufficient, unlike most other APIs.
+- New: paste a screenshot straight from your OS's own screenshot tool
+  (Win+Shift+S, Cmd+Shift+4, etc.) into Notes — it's detected and moved
+  into the Screenshots gallery automatically instead of pasting broken
+  image data as text. Works alongside the existing Capture button;
+  useful when you need a freeform region or something outside the
+  browser tab entirely, which Capture can't do.
+
 ## 1.13.0 — 2026-08-07
 
 - No more manual page refresh after a NoteDock update: when the

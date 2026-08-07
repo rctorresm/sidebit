@@ -14,7 +14,6 @@
   --danger: #e05d5d;
   --radius: 8px;
   --radius-lg: 12px;
-  --overlay: rgba(0, 0, 0, 0.5);
   --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --text-scale: 1;
   --scope-all: #e0973f;
@@ -34,7 +33,6 @@
   --success: #0e9f6e;
   --success-bg: #e6f9f1;
   --danger: #d0403f;
-  --overlay: rgba(255, 255, 255, 0.6);
   --scope-all: #b06a1e;
 }
 
@@ -54,31 +52,6 @@ body {
   flex-direction: column;
   min-height: 100vh;
   position: relative;
-}
-
-/* Custom background image: fixed layer behind everything, always covers
-   the current panel size no matter how it's resized. Panels stay on their
-   opaque --surface color so text remains readable over any image. */
-.bg-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  background-size: cover;
-  background-position: center;
-  background-repeat: no-repeat;
-  display: none;
-}
-body.has-bg-image {
-  background: transparent;
-}
-body.has-bg-image .bg-backdrop {
-  display: block;
-}
-body.has-bg-image .bg-backdrop::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: var(--overlay);
 }
 
 ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -661,8 +634,10 @@ body.has-bg-image .bg-backdrop::after {
   background-position: center;
   cursor: pointer;
   padding: 0;
+  transition: box-shadow 200ms ease;
 }
 .screenshot-thumb:hover { border-color: var(--accent-dim); }
+.screenshot-thumb.just-added { box-shadow: 0 0 0 2px var(--accent); }
 .screenshots-empty { padding: 6px 2px; }
 
 /* Lightbox */
@@ -818,28 +793,6 @@ body.has-bg-image .bg-backdrop::after {
 }
 .trash-empty { padding: 6px 2px; margin-bottom: 4px; }
 
-.bg-preview-row { display: flex; align-items: center; gap: 10px; }
-.bg-preview {
-  width: 56px;
-  height: 56px;
-  flex: none;
-  border-radius: 8px;
-  border: 1px solid var(--border-strong);
-  background-size: cover;
-  background-position: center;
-  background-color: var(--surface-2);
-}
-.bg-preview.empty {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.bg-preview-actions {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  align-items: flex-start;
-}
 .file-btn {
   display: inline-block;
   cursor: pointer;
@@ -850,10 +803,10 @@ body.has-bg-image .bg-backdrop::after {
   border: 1px solid var(--border-strong);
 }
 .secondary-btn:hover { color: var(--text); border-color: var(--danger); }
-.bg-status {
+.status-text {
   margin-top: 8px;
   font-size: calc(11px * var(--text-scale));
   color: var(--text-faint);
   min-height: 14px;
 }
-.bg-status.error { color: var(--danger); }
+.status-text.error { color: var(--danger); }

@@ -6,8 +6,6 @@
 <link rel="stylesheet" href="sidepanel.css" />
 </head>
 <body>
-  <div id="bgBackdrop" class="bg-backdrop"></div>
-
   <header class="app-header">
     <div class="brand">
       <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="brand-mark">
@@ -145,7 +143,7 @@
         <span class="settings-label">Screenshots</span>
         <span class="info-wrap">
           <button class="info-btn" type="button" aria-label="About Screenshots">i</button>
-          <div class="info-tooltip">Capture what's on screen without leaving the tab. Good for error messages, pricing pages, or anything you need visual proof of.</div>
+          <div class="info-tooltip">Capture button grabs the visible tab. Or use your OS screenshot tool (Win+Shift+S / Cmd+Shift+4) and paste into Notes — it's moved here automatically instead of pasting as text.</div>
         </span>
       </div>
       <div class="panel-head-actions">
@@ -184,7 +182,7 @@
         <button class="small-btn secondary-btn" id="lightboxCopyBtn">Copy</button>
         <button class="small-btn secondary-btn danger-btn" id="lightboxDeleteBtn">Delete</button>
       </div>
-      <div id="lightboxStatus" class="bg-status"></div>
+      <div id="lightboxStatus" class="status-text"></div>
     </div>
   </div>
 
@@ -237,19 +235,6 @@
       </div>
 
       <div class="settings-section">
-        <div class="settings-label">Background image</div>
-        <div class="bg-preview-row">
-          <div id="bgPreview" class="bg-preview empty"></div>
-          <div class="bg-preview-actions">
-            <label class="small-btn file-btn" for="bgFileInput">Upload</label>
-            <input type="file" id="bgFileInput" accept="image/*" class="hidden" />
-            <button class="small-btn secondary-btn" id="removeBgBtn">Remove</button>
-          </div>
-        </div>
-        <div id="bgStatus" class="bg-status"></div>
-      </div>
-
-      <div class="settings-section">
         <div class="settings-label">Recently deleted</div>
         <div id="trashList" class="trash-list"></div>
         <button class="small-btn secondary-btn danger-btn hidden" id="emptyTrashBtn">Empty trash</button>
@@ -262,7 +247,7 @@
           <label class="small-btn secondary-btn file-btn" for="importDataInput">Import data</label>
           <input type="file" id="importDataInput" accept="application/json" class="hidden" />
         </div>
-        <div id="backupStatus" class="bg-status"></div>
+        <div id="backupStatus" class="status-text"></div>
       </div>
     </div>
   </div>

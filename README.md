@@ -1,9 +1,9 @@
 # NoteDock
 
 A Chrome side panel for keeping notes docked open while you browse: separate
-note tabs for whatever you're working on, a set of fixed "quick copy"
-snippets you manage yourself, the ability to save highlighted text (and
-screenshots) from any page straight into your notes with one click, and
+note tabs for whatever you're working on, quick-copy snippets (global or
+scoped to a single tab), the ability to save highlighted text and
+screenshots from any page straight into your notes with one click, and
 appearance/backup settings on top.
 
 Built to be job-agnostic — it doesn't assume call-center work, sales, support,
@@ -31,35 +31,47 @@ the extension makes zero network requests.
   text selection; then it renders one small Shadow DOM pill near the
   selection ("Save to sidebar") and tears it down again immediately after.
   No persistent overlay, no polling, no page mutation.
-- `sidepanel.html/css/js` — the panel UI itself. Renders note tabs, the
-  quick-copy snippet list (drag-to-reorder in edit mode), the list of
-  highlights saved to the active note tab, a notes textarea that autosaves
-  (debounced, 400ms) per tab, a per-tab screenshot gallery, and a Settings
-  modal (theme, text size, font, background image, JSON export/import).
+- `sidepanel.html/css/js` — the panel UI itself. Renders note tabs
+  (pin + drag-to-reorder, pinned always sort first), the quick-copy
+  snippet list (drag-to-reorder in edit mode, split into global "All
+  tabs" and single-tab-scoped entries), the highlights saved to the
+  active note tab, a notes textarea that autosaves (debounced, 400ms)
+  and auto-grows with content, a per-tab screenshot gallery, global
+  search, a Recently Deleted trash with per-section Undo, and a Settings
+  modal (theme, text size, font, JSON export/import).
 - Data model in `chrome.storage.local`:
   ```
   {
     tabs: [{
-      id, name, notes,
+      id, name, notes, pinned,
       highlights: [{ id, text, source, title, url, time }],
       screenshots: [{ id, dataUrl, time }]
     }],
     activeTabId: string,
-    snippets: [{ id, label, value }],
-    settings: { theme, backgroundImage, font, textSize }
+    snippets: [{ id, label, value, scope: "all" | "tab", tabId }],
+    settings: { theme, font, textSize, quickCopyCollapsed, savedPagesCollapsed },
+    trash: [{ id, type, deletedAt, index, ...typeSpecificFields }]
   }
   ```
-  `highlights[].url` is a text-fragment deep link (`#:~:text=...`) back to
-  the exact highlighted passage, the same mechanism behind Chrome's
-  built-in "Copy link to highlight". `screenshots[].dataUrl` comes from
-  `chrome.tabs.captureVisibleTab` (viewport-only, not full-page).
+  `highlights[].url` is the plain source page URL. `screenshots[].dataUrl`
+  comes either from `chrome.tabs.captureVisibleTab` (viewport-only, not
+  full-page) or from pasting an image (e.g. from the OS's own snipping
+  tool) directly into the Notes textarea, which moves it to the
+  screenshot gallery instead of pasting broken image data as text.
 - The panel listens for `chrome.storage.onChanged` so it stays in sync
   whether a highlight was saved from a background tab or storage changed in
   another window.
-- `unlimitedStorage` and `downloads` permissions exist specifically for
-  background images / screenshots and for the screenshot lightbox's
-  Download button (`chrome.downloads.download` with `saveAs: true`, so it
-  always prompts for a location rather than silently saving).
+- Permission notes: `unlimitedStorage` is for screenshots (potentially many,
+  uncompressed PNGs); `downloads` is for the screenshot lightbox's Download
+  button (`chrome.downloads.download` with `saveAs: true`, always prompts
+  for a location rather than silently saving); `scripting` is used only by
+  `background.js` to re-inject `content.js` into already-open tabs when the
+  extension updates, so a page you can't afford to refresh — e.g. a
+  call-center agent's softphone running inside a CRM tab — still picks up
+  the fix. `host_permissions` is `<all_urls>` rather than separate
+  `http`/`https` patterns because `chrome.tabs.captureVisibleTab` (used by
+  the screenshot Capture button) specifically checks for that permission
+  string rather than treating equivalent wildcard patterns as sufficient.
 
 ## Known gaps / good next steps for a developer
 
