@@ -2,6 +2,14 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.20.0 — 2026-08-07
+
+- Removed the in-app "NoteDock" header (icon + wordmark) — it duplicated
+  Chrome's own side panel title bar, which already shows the name and
+  the new icon. The header is now just the search bar, made permanently
+  visible instead of hidden behind a magnifying-glass toggle, plus the
+  Settings gear in the corner as before.
+
 ## 1.19.1 — 2026-08-07
 
 - Redesigned the extension icon (16/48/128px) — a dark navy badge with a

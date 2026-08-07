@@ -114,7 +114,6 @@ const el = {
   lightboxCopyBtn: document.getElementById("lightboxCopyBtn"),
   lightboxDeleteBtn: document.getElementById("lightboxDeleteBtn"),
   lightboxStatus: document.getElementById("lightboxStatus"),
-  searchToggleBtn: document.getElementById("searchToggleBtn"),
   searchBar: document.getElementById("searchBar"),
   searchInput: document.getElementById("searchInput"),
   searchResults: document.getElementById("searchResults"),
@@ -1486,7 +1485,6 @@ function flashElement(target) {
 }
 
 function closeSearch() {
-  el.searchBar.classList.add("hidden");
   el.searchInput.value = "";
   el.searchResults.innerHTML = "";
   el.searchResults.classList.add("hidden");
@@ -1637,21 +1635,12 @@ function renderSearchResults(rawQuery) {
   el.searchResults.classList.remove("hidden");
 }
 
-el.searchToggleBtn.addEventListener("click", () => {
-  if (el.searchBar.classList.contains("hidden")) {
-    el.searchBar.classList.remove("hidden");
-    el.searchInput.focus();
-  } else {
-    closeSearch();
-  }
-});
-
 el.searchInput.addEventListener("input", () => renderSearchResults(el.searchInput.value));
 
 el.searchInput.addEventListener("keydown", e => {
   if (e.key === "Escape") {
     closeSearch();
-    el.searchToggleBtn.focus();
+    el.searchInput.blur();
   }
 });
 

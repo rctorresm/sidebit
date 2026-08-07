@@ -68,24 +68,14 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-.header-actions { display: flex; align-items: center; gap: 2px; }
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-weight: 700;
-  font-size: calc(14px * var(--text-scale));
-  letter-spacing: 0.01em;
-}
-.brand-mark { width: 16px; height: 16px; color: var(--accent-line); }
+.header-actions { display: flex; align-items: center; gap: 2px; flex: none; }
 
 /* Search */
 .search-bar {
   position: relative;
-  margin: 0 14px 10px;
-  flex: none;
+  flex: 1;
+  min-width: 0;
 }
-.search-bar.hidden { display: none; }
 #searchInput {
   width: 100%;
   background: var(--surface-2);
