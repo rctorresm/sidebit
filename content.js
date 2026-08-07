@@ -89,9 +89,9 @@
         font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
         font-size: 12px;
         font-weight: 600;
-        color: #E8E9EC;
-        background: #1C2027;
-        border: 1px solid #343B47;
+        color: #E6EDF3;
+        background: #161B22;
+        border: 1px solid #3D444D;
         border-radius: 999px;
         padding: 6px 12px;
         box-shadow: 0 4px 14px rgba(0,0,0,0.35);
@@ -99,9 +99,9 @@
         user-select: none;
         transition: background 120ms ease, transform 120ms ease;
       }
-      .pill:hover { background: #262B34; transform: translateY(-1px); }
+      .pill:hover { background: #1C2128; transform: translateY(-1px); }
       .pill svg { width: 12px; height: 12px; flex: none; }
-      .pill.saved { background: #1E3A2C; border-color: #2F6E4C; color: #7BE6A6; }
+      .pill.saved { background: #12301E; border-color: #2EA043; color: #56D364; }
     `;
     shadow.appendChild(style);
 
@@ -146,11 +146,21 @@
     });
   }
 
+  // Only shows the pill if NoteDock's side panel is actually open right now
+  // AND the "Save to sidebar" prompt hasn't been toggled off — otherwise
+  // there's nowhere for a click on it to save to.
+  function showPillIfAllowed(rect, text) {
+    chrome.runtime.sendMessage({ type: "CAN_SHOW_SAVE_PILL" }, response => {
+      if (chrome.runtime.lastError) return; // extension reloaded/updated mid-flight
+      if (response && response.allowed) showPill(rect, text);
+    });
+  }
+
   function handleSelectionChange() {
     const formSelection = getFormFieldSelection();
     if (formSelection) {
       if (formSelection.text.length > 4000) return; // avoid absurdly large blobs
-      showPill(formSelection.rect, formSelection.text);
+      showPillIfAllowed(formSelection.rect, formSelection.text);
       return;
     }
 
@@ -165,7 +175,7 @@
       const range = selection.getRangeAt(0);
       const rect = range.getBoundingClientRect();
       if (rect.width === 0 && rect.height === 0) return;
-      showPill(rect, text);
+      showPillIfAllowed(rect, text);
     } catch {
       /* selection API can throw on some pages mid-edit; ignore */
     }

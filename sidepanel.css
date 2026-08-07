@@ -1,23 +1,23 @@
 :root {
-  --bg: #121317;
-  --surface: #1a1c22;
-  --surface-2: #21232b;
-  --border: #2a2d37;
-  --border-strong: #3a3e4b;
-  --text: #f3f4f7;
-  --text-dim: #aeb3c0;
-  --text-faint: #868c9c;
-  --accent: #57a6ff;
-  --accent-dim: #3a608f;
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1c2128;
+  --border: #30363d;
+  --border-strong: #3d444d;
+  --text: #e6edf3;
+  --text-dim: #9198a1;
+  --text-faint: #7d8590;
+  --accent: #58a6ff;
+  --accent-dim: #3d6ea6;
   --on-accent: #08111f;
-  --success: #4ce0a4;
-  --success-bg: #163420;
-  --danger: #ff7d7d;
+  --success: #3fb950;
+  --success-bg: #12301e;
+  --danger: #f85149;
   --radius: 8px;
   --radius-lg: 12px;
   --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --text-scale: 1;
-  --scope-all: #ffb366;
+  --scope-all: #f0a83c;
 }
 
 :root[data-theme="light"] {
@@ -308,6 +308,38 @@ body {
   overflow-wrap: break-word;
 }
 .counter-text:empty { display: none; }
+
+/* Small pill toggle switch (e.g. "prompt on highlighted text") */
+.switch { position: relative; display: inline-flex; align-items: center; flex: none; cursor: pointer; }
+.switch input {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  margin: 0;
+  cursor: pointer;
+}
+.switch-track {
+  width: 28px;
+  height: 16px;
+  flex: none;
+  border-radius: 999px;
+  background: var(--border-strong);
+  position: relative;
+  transition: background 150ms ease;
+}
+.switch-thumb {
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: var(--text-dim);
+  transition: transform 150ms ease, background 150ms ease;
+}
+.switch input:checked + .switch-track { background: var(--accent); }
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(12px); background: var(--on-accent); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--accent); outline-offset: 2px; }
 
 /* Info tooltip ("i" in a circle) */
 .info-wrap { position: relative; display: inline-flex; flex: none; }

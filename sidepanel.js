@@ -5,7 +5,13 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
-const DEFAULT_SETTINGS = { theme: "light", font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false };
+const DEFAULT_SETTINGS = { theme: "light", font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false, highlightPromptEnabled: true };
+
+// Keeping this port open (for as long as the side panel document is open)
+// is how background.js knows whether to answer "yes" to a content script
+// asking whether it's OK to show the "Save to sidebar" prompt — that
+// prompt should never appear while NoteDock itself is closed.
+chrome.runtime.connect({ name: "sidepanel" });
 
 // Three self-contained, universally pre-installed fonts chosen for on-screen
 // readability — no bundled font files, no CSP/network concerns.
@@ -44,6 +50,7 @@ const el = {
   toggleCollapseHighlights: document.getElementById("toggleCollapseHighlights"),
   highlightsList: document.getElementById("highlightsList"),
   highlightsCounter: document.getElementById("highlightsCounter"),
+  highlightPromptToggle: document.getElementById("highlightPromptToggle"),
   clearHighlightsBtn: document.getElementById("clearHighlightsBtn"),
   notesArea: document.getElementById("notesArea"),
   notesCounter: document.getElementById("notesCounter"),
@@ -850,6 +857,11 @@ el.toggleCollapseHighlights.addEventListener("click", async () => {
   renderHighlights();
 });
 
+el.highlightPromptToggle.addEventListener("change", async () => {
+  const highlightPromptEnabled = el.highlightPromptToggle.checked;
+  await persist({ settings: { ...state.settings, highlightPromptEnabled } });
+});
+
 el.addSnippetBtn.addEventListener("click", async () => {
   const label = el.newSnippetLabel.value.trim();
   const value = el.newSnippetValue.value.trim();
@@ -874,6 +886,8 @@ el.addSnippetBtn.addEventListener("click", async () => {
 
 function renderHighlights() {
   wireUndoButton(el.undoHighlightBtn, "highlight", e => e.tabId === state.activeTabId);
+
+  el.highlightPromptToggle.checked = state.settings.highlightPromptEnabled !== false;
 
   const collapsed = !!state.settings.savedPagesCollapsed;
   el.highlightsBody.classList.toggle("hidden", collapsed);

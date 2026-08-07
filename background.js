@@ -28,7 +28,8 @@ chrome.runtime.onInstalled.addListener(async details => {
         font: "system",
         textSize: "medium",
         quickCopyCollapsed: false,
-        savedPagesCollapsed: false
+        savedPagesCollapsed: false,
+        highlightPromptEnabled: true
       }
     });
   }
@@ -57,6 +58,20 @@ chrome.runtime.onInstalled.addListener(async details => {
 // Open the side panel when the toolbar icon is clicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
+// The side panel document holds this port open for as long as it's open —
+// closing the panel (or navigating away from it) fires onDisconnect. This
+// is how content.js knows whether NoteDock is actually open right now,
+// so the "Save to sidebar" prompt never shows up with nothing there to
+// save to.
+let sidePanelOpen = false;
+chrome.runtime.onConnect.addListener(port => {
+  if (port.name !== "sidepanel") return;
+  sidePanelOpen = true;
+  port.onDisconnect.addListener(() => {
+    sidePanelOpen = false;
+  });
+});
+
 const MAX_HIGHLIGHT_LEN = 4000;
 const MAX_META_LEN = 500;
 
@@ -66,6 +81,15 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
   // onMessageExternal instead, which we never register. This check is
   // belt-and-suspenders against a misconfigured future change to that.
   if (sender.id !== chrome.runtime.id) return;
+
+  if (message?.type === "CAN_SHOW_SAVE_PILL") {
+    (async () => {
+      const { settings } = await chrome.storage.local.get(["settings"]);
+      const enabled = !settings || settings.highlightPromptEnabled !== false;
+      sendResponse({ allowed: sidePanelOpen && enabled });
+    })();
+    return true;
+  }
 
   if (message?.type === "SAVE_HIGHLIGHT" && typeof message.text === "string" && message.text.trim()) {
     (async () => {

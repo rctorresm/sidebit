@@ -2,6 +2,26 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.17.0 — 2026-08-07
+
+- Dark theme palette redone, modeled on GitHub's Dark theme — one of the
+  most widely used dark UI systems, and centered on the same blue-tinted
+  "light blue" direction requested instead of neutral gray. Background
+  pushed toward true near-black, all muted/secondary text now has a
+  distinct blue-gray hue instead of flat gray (and still clears WCAG AA:
+  "Notes"-style section titles are 5.07:1, was 3.44:1 the version before),
+  and the accent blue, success green, danger red, and Quick Copy orange
+  are all more saturated and vivid.
+- New toggle next to the "Saved from pages" title: turns the on-page
+  "Save to sidebar" prompt off entirely. When off, or whenever NoteDock's
+  side panel itself is closed, no prompt appears on any page — only shows
+  when the panel is genuinely open AND the toggle is on. Detecting
+  "panel is open" uses a live port connection from the panel to
+  background.js (the standard way to do this in a Chrome extension,
+  since there's no direct open/close event); the content script asks
+  background.js "is it OK to show the prompt right now?" for every
+  selection instead of assuming.
+
 ## 1.16.0 — 2026-08-07
 
 - Removed the item/word count from "Saved from pages" — the counting
