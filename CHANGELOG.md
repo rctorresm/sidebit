@@ -2,6 +2,19 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.18.0 — 2026-08-07
+
+- Removed the "System" theme option — just Dark and Light now.
+- Added custom accent colors in Settings, replacing the old fixed blue.
+  Two independent pickers per theme — "Borders & text" and "Buttons"
+  (button fill and border always match) — each with 4 small swatches:
+  Blue, Purple, Green, and Rose/Pink. Light theme's swatches are darker
+  and saturated for contrast against a light background; Dark theme's
+  are lighter/pastel for contrast against a dark one. All 8 checked
+  against WCAG AA — the lowest is 4.66:1, most are well above 5:1. Each
+  theme remembers its own picks independently, so switching Dark/Light
+  doesn't reset either one.
+
 ## 1.17.1 — 2026-08-07
 
 - Fixed the "Save to sidebar" toggle getting stuck as if it were off even

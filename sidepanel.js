@@ -5,7 +5,37 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
-const DEFAULT_SETTINGS = { theme: "light", font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false, highlightPromptEnabled: true };
+const DEFAULT_SETTINGS = {
+  theme: "light",
+  font: "system",
+  textSize: "medium",
+  quickCopyCollapsed: false,
+  savedPagesCollapsed: false,
+  highlightPromptEnabled: true,
+  lightAccentLine: "#2563eb",
+  lightAccentButton: "#2563eb",
+  darkAccentLine: "#58a6ff",
+  darkAccentButton: "#58a6ff"
+};
+
+// Four options per theme, each chosen for solid contrast against that
+// theme's background — darker/saturated for Light, lighter/pastel for
+// Dark — so every combination stays readable regardless of which one
+// someone picks for "borders & text" vs. "buttons".
+const ACCENT_SWATCHES = {
+  light: [
+    { color: "#2563eb", name: "Blue" },
+    { color: "#7c3aed", name: "Purple" },
+    { color: "#047857", name: "Green" },
+    { color: "#be185d", name: "Rose" }
+  ],
+  dark: [
+    { color: "#58a6ff", name: "Blue" },
+    { color: "#bc8cff", name: "Purple" },
+    { color: "#56d364", name: "Green" },
+    { color: "#f778ba", name: "Pink" }
+  ]
+};
 
 // Keeping this port open (for as long as the side panel document is open)
 // is how background.js knows whether to answer "yes" to a content script
@@ -29,7 +59,6 @@ let editingSnippets = false;
 let notesSaveTimer = null;
 let dragSrcId = null;
 let dragTabSrcId = null;
-let systemThemeQuery = null;
 
 const el = {
   tabsRow: document.getElementById("tabsRow"),
@@ -59,6 +88,10 @@ const el = {
   settingsModal: document.getElementById("settingsModal"),
   closeSettingsBtn: document.getElementById("closeSettingsBtn"),
   themeChoices: document.getElementById("themeChoices"),
+  lightLineSwatches: document.getElementById("lightLineSwatches"),
+  lightButtonSwatches: document.getElementById("lightButtonSwatches"),
+  darkLineSwatches: document.getElementById("darkLineSwatches"),
+  darkButtonSwatches: document.getElementById("darkButtonSwatches"),
   sizeChoices: document.getElementById("sizeChoices"),
   fontChoices: document.getElementById("fontChoices"),
   exportDataBtn: document.getElementById("exportDataBtn"),
@@ -294,24 +327,22 @@ el.undoScreenshotBtn.addEventListener("click", async () => {
 /* ---------------- Settings: theme + background image ---------------- */
 
 function applyTheme(theme) {
-  const root = document.documentElement;
-
-  if (systemThemeQuery) {
-    systemThemeQuery.removeEventListener("change", handleSystemThemeChange);
-    systemThemeQuery = null;
-  }
-
-  if (theme === "system") {
-    systemThemeQuery = window.matchMedia("(prefers-color-scheme: light)");
-    systemThemeQuery.addEventListener("change", handleSystemThemeChange);
-    root.dataset.theme = systemThemeQuery.matches ? "light" : "dark";
-  } else {
-    root.dataset.theme = theme === "light" ? "light" : "dark";
-  }
+  document.documentElement.dataset.theme = theme === "light" ? "light" : "dark";
+  applyAccentColors();
 }
 
-function handleSystemThemeChange(e) {
-  document.documentElement.dataset.theme = e.matches ? "light" : "dark";
+// Reads whichever theme is currently active and pushes that theme's chosen
+// swatches onto :root as inline custom properties — inline styles win over
+// the :root[data-theme] rules that hold the *default* swatch (first option
+// in ACCENT_SWATCHES), so switching themes or picking a different swatch
+// both funnel through here to stay in sync.
+function applyAccentColors() {
+  const isLight = document.documentElement.dataset.theme === "light";
+  const line = isLight ? state.settings.lightAccentLine : state.settings.darkAccentLine;
+  const button = isLight ? state.settings.lightAccentButton : state.settings.darkAccentButton;
+  const fallback = ACCENT_SWATCHES[isLight ? "light" : "dark"][0].color;
+  document.documentElement.style.setProperty("--accent-line", line || fallback);
+  document.documentElement.style.setProperty("--accent-button", button || fallback);
 }
 
 function applyFont(fontKey) {
@@ -339,7 +370,47 @@ function renderSettingsUI() {
   [...el.fontChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.fontChoice === font);
   });
+
+  syncSwatchRow(el.lightLineSwatches, state.settings.lightAccentLine);
+  syncSwatchRow(el.lightButtonSwatches, state.settings.lightAccentButton);
+  syncSwatchRow(el.darkLineSwatches, state.settings.darkAccentLine);
+  syncSwatchRow(el.darkButtonSwatches, state.settings.darkAccentButton);
 }
+
+function syncSwatchRow(container, selectedColor) {
+  [...container.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.color === selectedColor);
+  });
+}
+
+// Built once from ACCENT_SWATCHES rather than hand-written in the HTML, so
+// the colors only need to be defined in one place.
+function buildSwatchRow(container, themeKey, settingsKey) {
+  ACCENT_SWATCHES[themeKey].forEach(({ color, name }) => {
+    const btn = document.createElement("button");
+    btn.className = "swatch-btn";
+    btn.type = "button";
+    btn.dataset.color = color;
+    btn.title = name;
+    btn.setAttribute("aria-label", name);
+    btn.style.setProperty("--swatch-color", color);
+    container.appendChild(btn);
+  });
+
+  container.addEventListener("click", async e => {
+    const btn = e.target.closest(".swatch-btn");
+    if (!btn) return;
+    const settings = { ...state.settings, [settingsKey]: btn.dataset.color };
+    await persist({ settings });
+    applyAccentColors();
+    renderSettingsUI();
+  });
+}
+
+buildSwatchRow(el.lightLineSwatches, "light", "lightAccentLine");
+buildSwatchRow(el.lightButtonSwatches, "light", "lightAccentButton");
+buildSwatchRow(el.darkLineSwatches, "dark", "darkAccentLine");
+buildSwatchRow(el.darkButtonSwatches, "dark", "darkAccentButton");
 
 el.settingsBtn.addEventListener("click", () => el.settingsModal.classList.remove("hidden"));
 el.closeSettingsBtn.addEventListener("click", () => el.settingsModal.classList.add("hidden"));
