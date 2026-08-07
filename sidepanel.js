@@ -22,6 +22,7 @@ let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_
 let editingSnippets = false;
 let notesSaveTimer = null;
 let dragSrcId = null;
+let dragTabSrcId = null;
 let systemThemeQuery = null;
 
 const el = {
@@ -219,7 +220,7 @@ function trashEntryTitle(entry) {
 function resolveOwningTab(tabs, entry) {
   let target = tabs.find(t => t.id === entry.tabId);
   if (target) return { tabs, tab: target };
-  const fresh = { id: entry.tabId, name: entry.tabName || "Restored note", notes: "", highlights: [], screenshots: [] };
+  const fresh = { id: entry.tabId, name: entry.tabName || "Restored note", notes: "", highlights: [], screenshots: [], pinned: false };
   return { tabs: [...tabs, fresh], tab: fresh };
 }
 
@@ -485,7 +486,8 @@ el.importDataInput.addEventListener("change", async () => {
       name: t.name || "Note",
       notes: typeof t.notes === "string" ? t.notes : "",
       highlights: Array.isArray(t.highlights) ? t.highlights : [],
-      screenshots: Array.isArray(t.screenshots) ? t.screenshots : []
+      screenshots: Array.isArray(t.screenshots) ? t.screenshots : [],
+      pinned: !!t.pinned
     }));
     const activeTabId = tabs.some(t => t.id === data.activeTabId) ? data.activeTabId : (tabs[0] && tabs[0].id) || null;
     const snippets = Array.isArray(data.snippets) ? data.snippets : [];
@@ -551,13 +553,35 @@ function compressImageFile(file, maxDimension, quality) {
 
 /* ---------------- Tabs ---------------- */
 
+function isTabEmpty(tab) {
+  return !(tab.notes || "").trim() && !(tab.highlights || []).length && !(tab.screenshots || []).length;
+}
+
 function renderTabs() {
   wireUndoButton(el.undoTabBtn, "tab");
   el.tabsRow.innerHTML = "";
-  state.tabs.forEach(tab => {
+  // Pinned tabs always render first — computed fresh here rather than
+  // relied on in storage order, so display is correct even if the raw
+  // array ever ends up interleaved (import, restore, etc.).
+  const ordered = [...state.tabs.filter(t => t.pinned), ...state.tabs.filter(t => !t.pinned)];
+
+  ordered.forEach(tab => {
     const row = document.createElement("div");
     row.className = "note-tab" + (tab.id === state.activeTabId ? " active" : "");
     row.dataset.tabId = tab.id;
+    row.draggable = true;
+
+    const pinBtn = document.createElement("button");
+    pinBtn.className = "pin-btn" + (tab.pinned ? " pinned" : "");
+    pinBtn.title = tab.pinned ? "Unpin" : "Pin to top";
+    pinBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>`;
+    pinBtn.addEventListener("click", async e => {
+      e.stopPropagation();
+      const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, pinned: !t.pinned } : t));
+      await persist({ tabs: updatedTabs });
+      renderAll();
+    });
+    row.appendChild(pinBtn);
 
     const label = document.createElement("span");
     label.textContent = tab.name;
@@ -571,6 +595,10 @@ function renderTabs() {
     closeX.title = "Close this note";
     closeX.addEventListener("click", async e => {
       e.stopPropagation();
+      if (!isTabEmpty(tab)) {
+        const ok = confirm(`Close "${tab.name}"? You can undo this right after, or restore it later from Settings > Recently deleted.`);
+        if (!ok) return;
+      }
       closeTab(tab.id);
     });
     row.appendChild(closeX);
@@ -582,6 +610,48 @@ function renderTabs() {
     });
 
     row.addEventListener("dblclick", () => startRename(row, tab, label));
+
+    row.addEventListener("dragstart", e => {
+      dragTabSrcId = tab.id;
+      row.classList.add("dragging");
+      e.dataTransfer.effectAllowed = "move";
+    });
+    row.addEventListener("dragend", () => {
+      row.classList.remove("dragging");
+      [...el.tabsRow.children].forEach(r => r.classList.remove("drag-over"));
+      dragTabSrcId = null;
+    });
+    row.addEventListener("dragover", e => {
+      if (!dragTabSrcId || dragTabSrcId === tab.id) return;
+      const draggedTab = state.tabs.find(t => t.id === dragTabSrcId);
+      if (!draggedTab || !!draggedTab.pinned !== !!tab.pinned) return; // no mixing groups
+      e.preventDefault();
+      row.classList.add("drag-over");
+    });
+    row.addEventListener("dragleave", () => row.classList.remove("drag-over"));
+    row.addEventListener("drop", async e => {
+      e.preventDefault();
+      row.classList.remove("drag-over");
+      if (!dragTabSrcId || dragTabSrcId === tab.id) return;
+      const draggedTab = state.tabs.find(t => t.id === dragTabSrcId);
+      if (!draggedTab || !!draggedTab.pinned !== !!tab.pinned) return;
+
+      const isPinnedGroup = !!tab.pinned;
+      const group = state.tabs.filter(t => !!t.pinned === isPinnedGroup);
+      const otherGroup = state.tabs.filter(t => !!t.pinned !== isPinnedGroup);
+      const from = group.findIndex(t => t.id === dragTabSrcId);
+      const to = group.findIndex(t => t.id === tab.id);
+      if (from === -1 || to === -1) return;
+      const reorderedGroup = [...group];
+      const [moved] = reorderedGroup.splice(from, 1);
+      reorderedGroup.splice(to, 0, moved);
+
+      // Rebuild fully grouped regardless of prior storage order —
+      // self-heals the invariant on every reorder.
+      const newTabs = isPinnedGroup ? [...reorderedGroup, ...otherGroup] : [...otherGroup, ...reorderedGroup];
+      await persist({ tabs: newTabs });
+      renderAll();
+    });
 
     el.tabsRow.appendChild(row);
   });
@@ -613,7 +683,7 @@ async function closeTab(tabId) {
   let remaining = state.tabs.filter(t => t.id !== tabId);
   let newActive = state.activeTabId;
   if (remaining.length === 0) {
-    const fresh = { id: uid(), name: "Note 1", notes: "", highlights: [], screenshots: [] };
+    const fresh = { id: uid(), name: "Note 1", notes: "", highlights: [], screenshots: [], pinned: false };
     remaining = [fresh];
     newActive = fresh.id;
   } else if (tabId === state.activeTabId) {
@@ -626,7 +696,7 @@ async function closeTab(tabId) {
 
 el.newTabBtn.addEventListener("click", async () => {
   const n = state.tabs.length + 1;
-  const fresh = { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [] };
+  const fresh = { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [], pinned: false };
   const tabs = [...state.tabs, fresh];
   await persist({ tabs, activeTabId: fresh.id });
   renderAll();

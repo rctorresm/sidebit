@@ -244,6 +244,27 @@ body.has-bg-image .bg-backdrop::after {
 }
 .note-tab .close-x:hover { opacity: 1; background: var(--border); }
 
+.note-tab.dragging { opacity: 0.4; }
+.note-tab.drag-over { box-shadow: inset 2px 0 0 var(--accent); }
+
+.pin-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  color: var(--text-faint);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, color 120ms ease;
+}
+.pin-btn svg { width: 11px; height: 11px; }
+.note-tab:hover .pin-btn,
+.pin-btn.pinned { opacity: 1; }
+.pin-btn.pinned { color: var(--accent); }
+.pin-btn:hover { color: var(--accent); }
+
 .new-tab-row {
   display: flex;
   align-items: center;

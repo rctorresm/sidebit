@@ -6,7 +6,7 @@
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 function defaultTab(n) {
-  return { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [] };
+  return { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [], pinned: false };
 }
 
 // First install: seed one blank note tab so there's somewhere to type —

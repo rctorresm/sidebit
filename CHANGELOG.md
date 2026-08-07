@@ -2,6 +2,16 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.10.0 — 2026-08-07
+
+- Pin & reorder note tabs: hover a tab to reveal a pin icon (always
+  visible once pinned); pinned tabs always sort before unpinned ones.
+  Drag to reorder tabs within their own group — pinned and unpinned
+  tabs can't be mixed by dragging.
+- Closing a tab that has notes, highlights, or screenshots now asks for
+  confirmation first (mentioning it can still be undone or restored from
+  Recently Deleted). Closing a genuinely empty tab skips the prompt.
+
 ## 1.9.0 — 2026-08-07
 
 - Undo: a small undo icon now appears next to "+ New note", in Quick
