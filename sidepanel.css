@@ -1,23 +1,23 @@
 :root {
-  --bg: #14161a;
-  --surface: #1c2027;
-  --surface-2: #20242c;
-  --border: #2a2e37;
-  --border-strong: #343b47;
-  --text: #e8e9ec;
-  --text-dim: #9298a3;
-  --text-faint: #666c78;
-  --accent: #4c8dff;
-  --accent-dim: #345a91;
+  --bg: #121317;
+  --surface: #1a1c22;
+  --surface-2: #21232b;
+  --border: #2a2d37;
+  --border-strong: #3a3e4b;
+  --text: #f3f4f7;
+  --text-dim: #aeb3c0;
+  --text-faint: #868c9c;
+  --accent: #57a6ff;
+  --accent-dim: #3a608f;
   --on-accent: #08111f;
-  --success: #34d399;
-  --success-bg: #17281f;
-  --danger: #e05d5d;
+  --success: #4ce0a4;
+  --success-bg: #163420;
+  --danger: #ff7d7d;
   --radius: 8px;
   --radius-lg: 12px;
   --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --text-scale: 1;
-  --scope-all: #e0973f;
+  --scope-all: #ffb366;
 }
 
 :root[data-theme="light"] {
@@ -307,6 +307,7 @@ body {
   white-space: normal;
   overflow-wrap: break-word;
 }
+.counter-text:empty { display: none; }
 
 /* Info tooltip ("i" in a circle) */
 .info-wrap { position: relative; display: inline-flex; flex: none; }
@@ -682,7 +683,7 @@ body {
 }
 .lightbox-actions { display: flex; gap: 8px; justify-content: center; }
 .danger-btn { color: var(--danger); border-color: var(--danger); }
-.danger-btn:hover { background: var(--danger); color: #fff; }
+.danger-btn:hover { background: var(--danger); color: var(--on-accent); }
 
 /* Settings modal */
 .hidden { display: none !important; }

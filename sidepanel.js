@@ -895,8 +895,10 @@ function renderHighlights() {
     return;
   }
 
+  // Item/word count is intentionally not shown in the UI right now \u2014 kept
+  // here (unused) in case it's wanted again later.
   const totalWords = highlights.reduce((sum, h) => sum + countWords(h.text), 0);
-  el.highlightsCounter.textContent = `${highlights.length} item${highlights.length === 1 ? "" : "s"} \u00b7 ${totalWords} word${totalWords === 1 ? "" : "s"}`;
+  el.highlightsCounter.textContent = "";
 
   highlights.forEach(h => {
     const row = document.createElement("div");

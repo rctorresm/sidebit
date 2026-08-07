@@ -2,6 +2,22 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.16.0 — 2026-08-07
+
+- Removed the item/word count from "Saved from pages" — the counting
+  logic is still there (unused for now), just not shown.
+- Reworked the Dark theme palette for legibility and a punchier, more
+  pastel feel: background pushed closer to true black, primary text
+  brightened, and — the main fix — `--text-faint` (used everywhere:
+  section titles, placeholders, hints, icon borders) was only 3.44:1
+  contrast against the background, below the WCAG AA minimum. It's now
+  5.52:1. Accent blue, success green, danger red, and the Quick Copy
+  scope-all orange are all brighter/more saturated too. Also fixed a
+  latent bug this surfaced: the delete-button hover state used hardcoded
+  white text on the danger color, which fails contrast once danger is
+  brighter — now uses the same dark-on-bright text token buttons use.
+  Light theme is unchanged.
+
 ## 1.15.3 — 2026-08-07
 
 - Fixed the Notes quip getting cut off with "..." on longer lines. It now
