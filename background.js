@@ -27,15 +27,26 @@ chrome.runtime.onInstalled.addListener(async () => {
     });
   }
   if (!existing.settings) {
-    await chrome.storage.local.set({ settings: { theme: "dark", backgroundImage: null } });
+    await chrome.storage.local.set({
+      settings: { theme: "dark", backgroundImage: null, font: "system", textSize: "medium" }
+    });
   }
 });
 
 // Open the side panel when the toolbar icon is clicked.
 chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => {});
 
+const MAX_HIGHLIGHT_LEN = 4000;
+const MAX_META_LEN = 500;
+
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
-  if (message?.type === "SAVE_HIGHLIGHT") {
+  // onMessage already only fires for this extension's own contexts (its
+  // content scripts, side panel, etc.) — external pages/extensions land in
+  // onMessageExternal instead, which we never register. This check is
+  // belt-and-suspenders against a misconfigured future change to that.
+  if (sender.id !== chrome.runtime.id) return;
+
+  if (message?.type === "SAVE_HIGHLIGHT" && typeof message.text === "string" && message.text.trim()) {
     (async () => {
       const { tabs = [], activeTabId } = await chrome.storage.local.get(["tabs", "activeTabId"]);
       let targetTabs = tabs;
@@ -56,10 +67,10 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
           highlights: [
             {
               id: uid(),
-              text: message.text,
-              source: message.source || "",
-              title: message.title || "",
-              url: message.url || "",
+              text: message.text.slice(0, MAX_HIGHLIGHT_LEN),
+              source: String(message.source || "").slice(0, MAX_META_LEN),
+              title: String(message.title || "").slice(0, MAX_META_LEN),
+              url: String(message.url || "").slice(0, MAX_HIGHLIGHT_LEN + 200),
               time: Date.now()
             },
             ...t.highlights

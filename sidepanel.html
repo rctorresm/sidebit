@@ -75,10 +75,37 @@
 
       <div class="settings-section">
         <div class="settings-label">Theme</div>
-        <div class="theme-choices" id="themeChoices">
-          <button class="theme-btn" data-theme-choice="dark">Dark</button>
-          <button class="theme-btn" data-theme-choice="light">Light</button>
-          <button class="theme-btn" data-theme-choice="system">System</button>
+        <div class="choice-row" id="themeChoices">
+          <button class="choice-btn" data-theme-choice="dark">Dark</button>
+          <button class="choice-btn" data-theme-choice="light">Light</button>
+          <button class="choice-btn" data-theme-choice="system">System</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">Text size</div>
+        <div class="choice-row" id="sizeChoices">
+          <button class="choice-btn" data-size-choice="small">Small</button>
+          <button class="choice-btn" data-size-choice="medium">Medium</button>
+          <button class="choice-btn" data-size-choice="large">Large</button>
+        </div>
+      </div>
+
+      <div class="settings-section">
+        <div class="settings-label">Font</div>
+        <div class="choice-row" id="fontChoices">
+          <button class="choice-btn font-btn" data-font-choice="system">
+            <span class="font-swatch" style="font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;">Aa</span>
+            <span class="font-name">System</span>
+          </button>
+          <button class="choice-btn font-btn" data-font-choice="georgia">
+            <span class="font-swatch" style="font-family: Georgia, 'Times New Roman', serif;">Aa</span>
+            <span class="font-name">Georgia</span>
+          </button>
+          <button class="choice-btn font-btn" data-font-choice="verdana">
+            <span class="font-swatch" style="font-family: Verdana, Geneva, sans-serif;">Aa</span>
+            <span class="font-name">Verdana</span>
+          </button>
         </div>
       </div>
 

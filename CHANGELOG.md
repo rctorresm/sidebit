@@ -2,6 +2,17 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.2.0 — 2026-08-07
+
+- Settings: Text size (Small/Medium/Large) and Font (System, Georgia,
+  Verdana — chosen for on-screen readability) apply live across the whole
+  panel. Purely visual: copy/paste still moves plain text, unaffected by
+  either choice.
+- Security hardening ahead of Chrome Web Store submission: the background
+  service worker now verifies message sender identity and caps/sanitizes
+  all fields on incoming highlight-save messages (defense-in-depth; no
+  vulnerability was exploitable before this, see audit notes).
+
 ## 1.1.0 — 2026-08-07
 
 - Quick-copy snippets can be reordered by dragging the handle on each row

@@ -1,6 +1,17 @@
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-let state = { tabs: [], activeTabId: null, snippets: [], settings: { theme: "dark", backgroundImage: null } };
+const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium" };
+
+// Three self-contained, universally pre-installed fonts chosen for on-screen
+// readability — no bundled font files, no CSP/network concerns.
+const FONT_STACKS = {
+  system: "system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif",
+  georgia: "Georgia, 'Times New Roman', serif",
+  verdana: "Verdana, Geneva, sans-serif"
+};
+const TEXT_SCALES = { small: 0.92, medium: 1, large: 1.15 };
+
+let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_SETTINGS } };
 let editingSnippets = false;
 let notesSaveTimer = null;
 let dragSrcId = null;
@@ -22,6 +33,8 @@ const el = {
   settingsModal: document.getElementById("settingsModal"),
   closeSettingsBtn: document.getElementById("closeSettingsBtn"),
   themeChoices: document.getElementById("themeChoices"),
+  sizeChoices: document.getElementById("sizeChoices"),
+  fontChoices: document.getElementById("fontChoices"),
   bgBackdrop: document.getElementById("bgBackdrop"),
   bgPreview: document.getElementById("bgPreview"),
   bgFileInput: document.getElementById("bgFileInput"),
@@ -43,10 +56,12 @@ async function loadState() {
   state.tabs = data.tabs || [];
   state.activeTabId = data.activeTabId || (state.tabs[0] && state.tabs[0].id) || null;
   state.snippets = data.snippets || [];
-  state.settings = Object.assign({ theme: "dark", backgroundImage: null }, data.settings || {});
+  state.settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings || {});
   renderAll();
   applyTheme(state.settings.theme);
   applyBackground(state.settings.backgroundImage);
+  applyFont(state.settings.font);
+  applyTextScale(state.settings.textSize);
 }
 
 // Re-render if data changes elsewhere (a highlight saved from a page,
@@ -57,9 +72,11 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.activeTabId) state.activeTabId = changes.activeTabId.newValue;
   if (changes.snippets) state.snippets = changes.snippets.newValue || [];
   if (changes.settings) {
-    state.settings = Object.assign({ theme: "dark", backgroundImage: null }, changes.settings.newValue || {});
+    state.settings = Object.assign({ ...DEFAULT_SETTINGS }, changes.settings.newValue || {});
     applyTheme(state.settings.theme);
     applyBackground(state.settings.backgroundImage);
+    applyFont(state.settings.font);
+    applyTextScale(state.settings.textSize);
     renderSettingsUI();
   }
   renderAll();
@@ -96,6 +113,16 @@ function handleSystemThemeChange(e) {
   document.documentElement.dataset.theme = e.matches ? "light" : "dark";
 }
 
+function applyFont(fontKey) {
+  const stack = FONT_STACKS[fontKey] || FONT_STACKS.system;
+  document.documentElement.style.setProperty("--app-font", stack);
+}
+
+function applyTextScale(sizeKey) {
+  const scale = TEXT_SCALES[sizeKey] ?? 1;
+  document.documentElement.style.setProperty("--text-scale", scale);
+}
+
 function applyBackground(dataUrl) {
   if (dataUrl) {
     el.bgBackdrop.style.backgroundImage = `url("${dataUrl}")`;
@@ -110,6 +137,16 @@ function renderSettingsUI() {
   const theme = state.settings.theme || "dark";
   [...el.themeChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.themeChoice === theme);
+  });
+
+  const textSize = state.settings.textSize || "medium";
+  [...el.sizeChoices.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.sizeChoice === textSize);
+  });
+
+  const font = state.settings.font || "system";
+  [...el.fontChoices.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.fontChoice === font);
   });
 
   if (state.settings.backgroundImage) {
@@ -129,12 +166,32 @@ el.settingsModal.addEventListener("click", e => {
 });
 
 el.themeChoices.addEventListener("click", async e => {
-  const btn = e.target.closest(".theme-btn");
+  const btn = e.target.closest(".choice-btn");
   if (!btn) return;
   const theme = btn.dataset.themeChoice;
   const settings = { ...state.settings, theme };
   await persist({ settings });
   applyTheme(theme);
+  renderSettingsUI();
+});
+
+el.sizeChoices.addEventListener("click", async e => {
+  const btn = e.target.closest(".choice-btn");
+  if (!btn) return;
+  const textSize = btn.dataset.sizeChoice;
+  const settings = { ...state.settings, textSize };
+  await persist({ settings });
+  applyTextScale(textSize);
+  renderSettingsUI();
+});
+
+el.fontChoices.addEventListener("click", async e => {
+  const btn = e.target.closest(".choice-btn");
+  if (!btn) return;
+  const font = btn.dataset.fontChoice;
+  const settings = { ...state.settings, font };
+  await persist({ settings });
+  applyFont(font);
   renderSettingsUI();
 });
 

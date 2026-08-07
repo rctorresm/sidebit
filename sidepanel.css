@@ -15,6 +15,8 @@
   --radius: 8px;
   --radius-lg: 12px;
   --overlay: rgba(0, 0, 0, 0.5);
+  --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --text-scale: 1;
 }
 
 :root[data-theme="light"] {
@@ -41,8 +43,8 @@ html, body {
   height: 100%;
   background: var(--bg);
   color: var(--text);
-  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  font-size: 13px;
+  font-family: var(--app-font);
+  font-size: calc(13px * var(--text-scale));
 }
 
 body {
@@ -94,7 +96,7 @@ body.has-bg-image .bg-backdrop::after {
   align-items: center;
   gap: 8px;
   font-weight: 700;
-  font-size: 14px;
+  font-size: calc(14px * var(--text-scale));
   letter-spacing: 0.01em;
 }
 .brand-mark { width: 16px; height: 16px; color: var(--accent); }
@@ -116,7 +118,7 @@ body.has-bg-image .bg-backdrop::after {
   background: var(--surface);
   border: 1px solid var(--border);
   color: var(--text-dim);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale));
   font-weight: 600;
   white-space: nowrap;
   cursor: pointer;
@@ -153,7 +155,7 @@ body.has-bg-image .bg-backdrop::after {
   color: var(--text-dim);
   border-radius: var(--radius);
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale));
   font-weight: 600;
   cursor: pointer;
   flex: none;
@@ -177,7 +179,7 @@ body.has-bg-image .bg-backdrop::after {
 }
 .panel-head h2 {
   margin: 0;
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -211,10 +213,10 @@ body.has-bg-image .bg-backdrop::after {
   border: 1px solid transparent;
 }
 .snippet-row .snippet-text { flex: 1; min-width: 0; }
-.snippet-row .snippet-label { font-weight: 600; font-size: 12px; color: var(--text); }
+.snippet-row .snippet-label { font-weight: 600; font-size: calc(12px * var(--text-scale)); color: var(--text); }
 .snippet-row .snippet-value {
   font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
-  font-size: 11.5px;
+  font-size: calc(11.5px * var(--text-scale));
   color: var(--text-dim);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -227,7 +229,7 @@ body.has-bg-image .bg-backdrop::after {
   color: var(--text-dim);
   border-radius: 6px;
   padding: 5px 9px;
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale));
   font-weight: 700;
   cursor: pointer;
 }
@@ -296,7 +298,7 @@ body.has-bg-image .bg-backdrop::after {
   border: none;
   border-radius: 6px;
   padding: 6px 10px;
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale));
   font-weight: 700;
   cursor: pointer;
 }
@@ -312,7 +314,7 @@ body.has-bg-image .bg-backdrop::after {
   border: 1px solid transparent;
 }
 .highlight-text {
-  font-size: 12.5px;
+  font-size: calc(12.5px * var(--text-scale));
   color: var(--text);
   line-height: 1.4;
   margin: 0 0 6px;
@@ -326,7 +328,7 @@ body.has-bg-image .bg-backdrop::after {
   gap: 8px;
 }
 .highlight-source {
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--text-scale));
   color: var(--text-faint);
   overflow: hidden;
   text-overflow: ellipsis;
@@ -341,7 +343,7 @@ a.highlight-source:hover {
 
 .empty-state {
   color: var(--text-faint);
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale));
   line-height: 1.5;
   padding: 10px 4px;
 }
@@ -349,7 +351,7 @@ a.highlight-source:hover {
 /* Notes */
 .notes-panel { flex: 1; display: flex; flex-direction: column; min-height: 140px; }
 .save-indicator {
-  font-size: 10.5px;
+  font-size: calc(10.5px * var(--text-scale));
   color: var(--success);
   opacity: 0;
   transition: opacity 200ms ease;
@@ -394,7 +396,7 @@ a.highlight-source:hover {
 }
 .settings-card .panel-head { margin-bottom: 12px; }
 .settings-card .panel-head h2 {
-  font-size: 13px;
+  font-size: calc(13px * var(--text-scale));
   text-transform: none;
   letter-spacing: normal;
   color: var(--text);
@@ -403,7 +405,7 @@ a.highlight-source:hover {
 .settings-section { margin-bottom: 16px; }
 .settings-section:last-child { margin-bottom: 0; }
 .settings-label {
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale));
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
@@ -411,24 +413,39 @@ a.highlight-source:hover {
   margin-bottom: 8px;
 }
 
-.theme-choices { display: flex; gap: 6px; }
-.theme-btn {
+.choice-row { display: flex; gap: 6px; }
+.choice-btn {
   flex: 1;
   background: var(--surface-2);
   border: 1px solid var(--border-strong);
   color: var(--text-dim);
   border-radius: 6px;
   padding: 7px 6px;
-  font-size: 12px;
+  font-size: calc(12px * var(--text-scale));
   font-weight: 600;
   cursor: pointer;
 }
-.theme-btn:hover { color: var(--text); }
-.theme-btn.active {
+.choice-btn:hover { color: var(--text); }
+.choice-btn.active {
   color: var(--text);
   border-color: var(--accent);
   box-shadow: inset 0 0 0 1px var(--accent);
 }
+
+.font-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 8px 4px 7px;
+}
+.font-swatch { font-size: calc(15px * var(--text-scale)); line-height: 1; color: var(--text); }
+.font-name {
+  font-size: calc(9.5px * var(--text-scale));
+  font-weight: 600;
+  color: var(--text-faint);
+}
+.font-btn.active .font-name { color: var(--text); }
 
 .bg-preview-row { display: flex; align-items: center; gap: 10px; }
 .bg-preview {
@@ -464,7 +481,7 @@ a.highlight-source:hover {
 .secondary-btn:hover { color: var(--text); border-color: var(--danger); }
 .bg-status {
   margin-top: 8px;
-  font-size: 11px;
+  font-size: calc(11px * var(--text-scale));
   color: var(--text-faint);
   min-height: 14px;
 }
