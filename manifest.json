@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "NoteDock",
-  "version": "1.11.1",
+  "version": "1.11.2",
   "description": "Always-on side panel for quick notes, one-click quick-copy snippets, and saving highlighted text from any page.",
   "permissions": ["storage", "sidePanel", "unlimitedStorage", "downloads"],
   "host_permissions": ["http://*/*", "https://*/*"],
@@ -19,7 +19,8 @@
       "matches": ["http://*/*", "https://*/*"],
       "js": ["content.js"],
       "run_at": "document_idle",
-      "all_frames": true
+      "all_frames": true,
+      "match_origin_as_fallback": true
     }
   ],
   "icons": {

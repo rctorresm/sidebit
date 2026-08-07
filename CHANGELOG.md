@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.11.2 — 2026-08-07
+
+- Fixed another highlight-to-save gap: `all_frames` alone doesn't reach
+  iframes with no real URL (`about:blank`/`about:srcdoc`) — the common
+  pattern for rich-text editors (e.g. a Zendesk-style reply composer)
+  that build an iframe in JS rather than loading a page into it. Added
+  `match_origin_as_fallback: true` so those inherit their parent's
+  origin for content-script matching.
+
 ## 1.11.1 — 2026-08-07
 
 - Simplified Quick copy scope: removed the "This tab only" checkbox from
