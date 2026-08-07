@@ -2,6 +2,19 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.15.1 — 2026-08-07
+
+- Added a small "Paste →" hint next to the Screenshots Capture button, so
+  the paste-a-screenshot behavior (explained in the info tooltip) is
+  visible at a glance instead of only on hover.
+- Fixed low-contrast text on all accent-colored buttons (Capture, Add,
+  Download, Export data) in Light theme — the near-black label text was
+  only legible against the brighter blue used in Dark theme; against
+  Light theme's more saturated blue it fell to a 3.79:1 contrast ratio,
+  below the WCAG AA minimum. Button text color is now theme-aware (white
+  on Light's accent, near-black on Dark's) — 5.17:1 and 5.91:1
+  respectively.
+
 ## 1.15.0 — 2026-08-07
 
 - The Notes counter is now a movie-quip generator instead of a plain
