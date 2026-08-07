@@ -2,6 +2,14 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.11.1 — 2026-08-07
+
+- Simplified Quick copy scope: removed the "This tab only" checkbox from
+  the Add row — it was a second control doing the same job as the
+  per-row scope dot. New snippets now always start as "All tabs"; click
+  the dot right after adding one if you want it tab-only, same as any
+  existing entry.
+
 ## 1.11.0 — 2026-08-07
 
 - Quick copy split: snippets can now be "All tabs" (today's behavior —

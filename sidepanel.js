@@ -39,7 +39,6 @@ const el = {
   addSnippetRow: document.getElementById("addSnippetRow"),
   newSnippetLabel: document.getElementById("newSnippetLabel"),
   newSnippetValue: document.getElementById("newSnippetValue"),
-  newSnippetTabOnly: document.getElementById("newSnippetTabOnly"),
   addSnippetBtn: document.getElementById("addSnippetBtn"),
   highlightsList: document.getElementById("highlightsList"),
   highlightsCounter: document.getElementById("highlightsCounter"),
@@ -920,15 +919,13 @@ el.addSnippetBtn.addEventListener("click", async () => {
   const label = el.newSnippetLabel.value.trim();
   const value = el.newSnippetValue.value.trim();
   if (!label || !value) return;
-  const tabOnly = el.newSnippetTabOnly.checked;
-  const fresh = tabOnly
-    ? { id: uid(), label, value, scope: "tab", tabId: state.activeTabId }
-    : { id: uid(), label, value, scope: "all", tabId: null };
+  // New snippets always start as "All tabs" — click the scope dot right
+  // after adding if you want this one tab-only, same as any other entry.
+  const fresh = { id: uid(), label, value, scope: "all", tabId: null };
   const snippets = [...state.snippets, fresh];
   await persist({ snippets });
   el.newSnippetLabel.value = "";
   el.newSnippetValue.value = "";
-  el.newSnippetTabOnly.checked = false;
   el.newSnippetLabel.focus();
   renderSnippets();
 });

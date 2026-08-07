@@ -518,13 +518,11 @@ body.has-bg-image .bg-backdrop::after {
 
 .add-snippet-row {
   display: flex;
-  flex-direction: column;
   gap: 6px;
   margin-top: 8px;
 }
 .add-snippet-row.hidden { display: none; }
-.add-snippet-fields { display: flex; gap: 6px; }
-.add-snippet-fields input {
+.add-snippet-row input {
   flex: 1;
   min-width: 0;
   background: var(--surface-2);
@@ -534,21 +532,6 @@ body.has-bg-image .bg-backdrop::after {
   padding: 6px 8px;
   font: inherit;
 }
-.add-snippet-actions {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.scope-check {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  font-size: calc(11px * var(--text-scale));
-  color: var(--text-dim);
-  cursor: pointer;
-}
-.scope-check input { margin: 0; accent-color: var(--scope-all); }
 .small-btn {
   flex: none;
   background: var(--accent);
