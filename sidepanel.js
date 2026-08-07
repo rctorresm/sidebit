@@ -27,6 +27,10 @@ let systemThemeQuery = null;
 const el = {
   tabsRow: document.getElementById("tabsRow"),
   newTabBtn: document.getElementById("newTabBtn"),
+  undoTabBtn: document.getElementById("undoTabBtn"),
+  undoSnippetBtn: document.getElementById("undoSnippetBtn"),
+  undoHighlightBtn: document.getElementById("undoHighlightBtn"),
+  undoScreenshotBtn: document.getElementById("undoScreenshotBtn"),
   snippetsBody: document.getElementById("snippetsBody"),
   snippetsList: document.getElementById("snippetsList"),
   toggleCollapseSnippets: document.getElementById("toggleCollapseSnippets"),
@@ -190,6 +194,18 @@ function renderTrash() {
   });
 }
 
+// Trash is stored newest-first, so this naturally returns the most recent
+// matching deletion — repeated undo clicks step further back each time.
+function findLastTrash(type, filterFn) {
+  return state.trash.find(e => e.type === type && (!filterFn || filterFn(e)));
+}
+
+function wireUndoButton(btn, type, filterFn) {
+  const entry = findLastTrash(type, filterFn);
+  btn.classList.toggle("hidden", !entry);
+  if (entry) btn.title = `Undo: restore "${trashEntryTitle(entry)}"`;
+}
+
 function trashEntryTitle(entry) {
   if (entry.type === "tab") return entry.tab.name;
   if (entry.type === "highlight") return entry.highlight.text.slice(0, 60);
@@ -253,6 +269,23 @@ el.emptyTrashBtn.addEventListener("click", async () => {
   if (!ok) return;
   await persist({ trash: [] });
   renderTrash();
+});
+
+el.undoTabBtn.addEventListener("click", async () => {
+  const entry = findLastTrash("tab");
+  if (entry) await restoreTrashEntry(entry.id);
+});
+el.undoSnippetBtn.addEventListener("click", async () => {
+  const entry = findLastTrash("snippet");
+  if (entry) await restoreTrashEntry(entry.id);
+});
+el.undoHighlightBtn.addEventListener("click", async () => {
+  const entry = findLastTrash("highlight", e => e.tabId === state.activeTabId);
+  if (entry) await restoreTrashEntry(entry.id);
+});
+el.undoScreenshotBtn.addEventListener("click", async () => {
+  const entry = findLastTrash("screenshot", e => e.tabId === state.activeTabId);
+  if (entry) await restoreTrashEntry(entry.id);
 });
 
 /* ---------------- Settings: theme + background image ---------------- */
@@ -519,6 +552,7 @@ function compressImageFile(file, maxDimension, quality) {
 /* ---------------- Tabs ---------------- */
 
 function renderTabs() {
+  wireUndoButton(el.undoTabBtn, "tab");
   el.tabsRow.innerHTML = "";
   state.tabs.forEach(tab => {
     const row = document.createElement("div");
@@ -612,6 +646,8 @@ function flashCopied(btn) {
 }
 
 function renderSnippets() {
+  wireUndoButton(el.undoSnippetBtn, "snippet");
+
   const collapsed = !!state.settings.quickCopyCollapsed;
   el.snippetsBody.classList.toggle("hidden", collapsed);
   el.toggleCollapseSnippets.classList.toggle("collapsed", collapsed);
@@ -788,6 +824,8 @@ el.addSnippetBtn.addEventListener("click", async () => {
 /* ---------------- Highlights ---------------- */
 
 function renderHighlights() {
+  wireUndoButton(el.undoHighlightBtn, "highlight", e => e.tabId === state.activeTabId);
+
   el.highlightsList.innerHTML = "";
   const tab = activeTab();
   const highlights = tab ? tab.highlights || [] : [];
@@ -925,6 +963,8 @@ el.notesArea.addEventListener("input", () => {
 /* ---------------- Screenshots ---------------- */
 
 function renderScreenshots() {
+  wireUndoButton(el.undoScreenshotBtn, "screenshot", e => e.tabId === state.activeTabId);
+
   el.screenshotsStrip.innerHTML = "";
   const tab = activeTab();
   const shots = tab ? tab.screenshots || [] : [];

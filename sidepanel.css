@@ -244,9 +244,15 @@ body.has-bg-image .bg-backdrop::after {
 }
 .note-tab .close-x:hover { opacity: 1; background: var(--border); }
 
-.new-tab-btn {
+.new-tab-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
   margin: 0 14px 10px;
   align-self: flex-start;
+  flex: none;
+}
+.new-tab-btn {
   background: none;
   border: 1px dashed var(--border-strong);
   color: var(--text-dim);

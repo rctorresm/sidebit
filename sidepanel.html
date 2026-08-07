@@ -39,7 +39,15 @@
   <nav class="tabs-row" id="tabsRow">
     <!-- note tabs injected here -->
   </nav>
-  <button class="new-tab-btn" id="newTabBtn" title="Start a new note">+ New note</button>
+  <div class="new-tab-row">
+    <button class="new-tab-btn" id="newTabBtn" title="Start a new note">+ New note</button>
+    <button class="icon-btn hidden" id="undoTabBtn" title="Undo">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 7v6h6"></path>
+        <path d="M3 13a9 9 0 1 0 3-7.7L3 7"></path>
+      </svg>
+    </button>
+  </div>
 
   <section class="panel snippets-panel">
     <div class="panel-head">
@@ -51,6 +59,12 @@
         </span>
       </div>
       <div class="panel-head-actions">
+        <button class="icon-btn hidden" id="undoSnippetBtn" title="Undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7v6h6"></path>
+            <path d="M3 13a9 9 0 1 0 3-7.7L3 7"></path>
+          </svg>
+        </button>
         <button class="icon-btn" id="toggleCollapseSnippets" title="Collapse Quick copy">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <polyline points="6 9 12 15 18 9"></polyline>
@@ -84,6 +98,13 @@
         </span>
         <span id="highlightsCounter" class="counter-text"></span>
       </div>
+      <div class="panel-head-actions">
+      <button class="icon-btn hidden" id="undoHighlightBtn" title="Undo">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 7v6h6"></path>
+          <path d="M3 13a9 9 0 1 0 3-7.7L3 7"></path>
+        </svg>
+      </button>
       <button class="icon-btn hidden" id="clearHighlightsBtn" title="Delete all saved highlights for this note">
         <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="3 6 5 6 21 6"></polyline>
@@ -92,6 +113,7 @@
           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
         </svg>
       </button>
+      </div>
     </div>
     <div id="highlightsList" class="highlights-list"></div>
   </section>
@@ -118,13 +140,21 @@
           <div class="info-tooltip">Capture what's on screen without leaving the tab. Good for error messages, pricing pages, or anything you need visual proof of.</div>
         </span>
       </div>
-      <button class="small-btn capture-btn" id="captureBtn">
-        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
-          <circle cx="12" cy="13" r="4"></circle>
-        </svg>
-        <span>Capture</span>
-      </button>
+      <div class="panel-head-actions">
+        <button class="icon-btn hidden" id="undoScreenshotBtn" title="Undo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M3 7v6h6"></path>
+            <path d="M3 13a9 9 0 1 0 3-7.7L3 7"></path>
+          </svg>
+        </button>
+        <button class="small-btn capture-btn" id="captureBtn">
+          <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+            <circle cx="12" cy="13" r="4"></circle>
+          </svg>
+          <span>Capture</span>
+        </button>
+      </div>
     </div>
     <div id="screenshotsStrip" class="screenshots-strip"></div>
   </section>

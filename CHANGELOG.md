@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.9.0 — 2026-08-07
+
+- Undo: a small undo icon now appears next to "+ New note", in Quick
+  copy, Saved from pages, and Screenshots — but only when there's
+  something recent to undo for that section. Restores the most recent
+  matching deletion (repeatable — the next click naturally targets the
+  next-most-recent one). Deeper history still lives in Settings >
+  Recently deleted.
+
 ## 1.8.0 — 2026-08-07
 
 - Fixed: "Save to sidebar" now appears for text highlighted inside a
