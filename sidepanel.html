@@ -150,7 +150,7 @@
           <div class="info-tooltip">Capture button grabs the visible tab. Or use your OS screenshot tool (Win+Shift+S / Cmd+Shift+4) and paste into Notes — it's moved here automatically instead of pasting as text.</div>
         </span>
       </div>
-      <div class="panel-head-actions">
+      <div class="panel-head-actions" id="screenshotsNormalActions">
         <button class="icon-btn hidden" id="undoScreenshotBtn" title="Undo">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M3 7v6h6"></path>
@@ -164,6 +164,42 @@
             <circle cx="12" cy="13" r="4"></circle>
           </svg>
           <span>Capture</span>
+        </button>
+        <button class="icon-btn hidden" id="selectScreenshotsBtn" title="Select screenshots">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="panel-head-actions hidden" id="screenshotsSelectActions">
+        <button class="icon-btn" id="selectAllScreenshotsBtn" title="Select all">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 11 12 14 22 4"></polyline>
+            <path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path>
+          </svg>
+        </button>
+        <span class="selection-count" id="screenshotSelectionCount">0 selected</span>
+        <button class="icon-btn" id="downloadSelectedScreenshotsBtn" title="Download selected" disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+            <polyline points="7 10 12 15 17 10"></polyline>
+            <line x1="12" y1="15" x2="12" y2="3"></line>
+          </svg>
+        </button>
+        <button class="icon-btn" id="deleteSelectedScreenshotsBtn" title="Delete selected" disabled>
+          <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="3 6 5 6 21 6"></polyline>
+            <path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path>
+            <path d="M10 11v6"></path><path d="M14 11v6"></path>
+            <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
+          </svg>
+        </button>
+        <button class="icon-btn" id="cancelSelectScreenshotsBtn" title="Cancel">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
         </button>
       </div>
     </div>

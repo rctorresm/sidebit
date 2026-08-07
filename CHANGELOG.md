@@ -2,6 +2,22 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.19.0 — 2026-08-07
+
+- Screenshots gallery: new Select mode (icon button next to Capture, shown
+  once you have screenshots) — pick individual thumbnails or Select all,
+  then Delete or Download the batch. Deliberately not called "copy" for
+  the multi-select case: the system clipboard can only hold one image at
+  a time regardless of what any app does, so a real multi-copy isn't
+  possible — Download is the equivalent that actually works for grabbing
+  several at once. Deleted screenshots still go through Recently Deleted
+  individually, so each stays undoable. Bulk downloads skip the per-file
+  save dialog (straight to the Downloads folder) — prompting once per
+  file would be unusable for more than one or two images.
+- Added a small copy icon directly on each screenshot thumbnail (hover to
+  reveal) — copies that one image to the clipboard without opening the
+  lightbox first, for quickly grabbing one screenshot after another.
+
 ## 1.18.0 — 2026-08-07
 
 - Removed the "System" theme option — just Dark and Light now.

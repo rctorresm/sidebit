@@ -423,6 +423,8 @@ body {
 .icon-btn:hover { color: var(--text); background: var(--surface-2); }
 .icon-btn svg { width: 14px; height: 14px; }
 .icon-btn.active { color: var(--accent-line); }
+.icon-btn:disabled { opacity: 0.35; cursor: default; }
+.icon-btn:disabled:hover { background: none; color: var(--text-faint); }
 
 /* Snippets */
 .snippets-panel { max-height: 220px; display: flex; flex-direction: column; }
@@ -672,6 +674,7 @@ body {
   width: 60px;
   height: 60px;
   flex: none;
+  position: relative;
   border-radius: 6px;
   border: 1px solid var(--border-strong);
   background-color: var(--surface-2);
@@ -681,9 +684,74 @@ body {
   padding: 0;
   transition: box-shadow 200ms ease;
 }
-.screenshot-thumb:hover { border-color: var(--accent-line); }
+.screenshot-thumb:hover, .screenshot-thumb:focus-visible { border-color: var(--accent-line); outline: none; }
 .screenshot-thumb.just-added { box-shadow: 0 0 0 2px var(--accent-line); }
+.screenshot-thumb.selected { box-shadow: 0 0 0 2px var(--accent-button); }
 .screenshots-empty { padding: 6px 2px; }
+
+/* Per-thumbnail copy button — hover-revealed, hidden entirely while
+   selecting so it can't be mistaken for a selection control. */
+.thumb-copy-btn {
+  position: absolute;
+  top: 3px;
+  right: 3px;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: none;
+  border-radius: 5px;
+  background: rgba(0, 0, 0, 0.55);
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 120ms ease, background 120ms ease;
+}
+.screenshot-thumb:hover .thumb-copy-btn,
+.screenshot-thumb:focus-within .thumb-copy-btn { opacity: 1; }
+.thumb-copy-btn:hover { background: rgba(0, 0, 0, 0.8); }
+.thumb-copy-btn.copied { background: var(--success); color: var(--on-accent); opacity: 1; }
+.screenshots-strip.selecting .thumb-copy-btn { display: none; }
+
+/* Selection checkbox mark — purely decorative; the whole thumbnail is the
+   click target while selecting, so this just reflects state. */
+.thumb-check {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 16px;
+  height: 16px;
+  border-radius: 4px;
+  border: 1.5px solid #fff;
+  background: rgba(0, 0, 0, 0.35);
+  display: none;
+}
+.screenshots-strip.selecting .thumb-check { display: block; }
+.screenshot-thumb.selected .thumb-check {
+  background: var(--accent-button);
+  border-color: var(--accent-button);
+}
+.screenshot-thumb.selected .thumb-check::after {
+  content: "";
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--on-accent);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+
+.selection-count {
+  font-size: calc(11px * var(--text-scale));
+  color: var(--text-dim);
+  white-space: nowrap;
+  flex: none;
+}
+.icon-btn.all-selected { color: var(--accent-line); }
 
 /* Lightbox */
 .lightbox-card {

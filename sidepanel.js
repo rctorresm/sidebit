@@ -99,6 +99,14 @@ const el = {
   backupStatus: document.getElementById("backupStatus"),
   captureBtn: document.getElementById("captureBtn"),
   screenshotsStrip: document.getElementById("screenshotsStrip"),
+  screenshotsNormalActions: document.getElementById("screenshotsNormalActions"),
+  screenshotsSelectActions: document.getElementById("screenshotsSelectActions"),
+  selectScreenshotsBtn: document.getElementById("selectScreenshotsBtn"),
+  selectAllScreenshotsBtn: document.getElementById("selectAllScreenshotsBtn"),
+  screenshotSelectionCount: document.getElementById("screenshotSelectionCount"),
+  downloadSelectedScreenshotsBtn: document.getElementById("downloadSelectedScreenshotsBtn"),
+  deleteSelectedScreenshotsBtn: document.getElementById("deleteSelectedScreenshotsBtn"),
+  cancelSelectScreenshotsBtn: document.getElementById("cancelSelectScreenshotsBtn"),
   screenshotModal: document.getElementById("screenshotModal"),
   closeScreenshotBtn: document.getElementById("closeScreenshotBtn"),
   lightboxImg: document.getElementById("lightboxImg"),
@@ -115,6 +123,9 @@ const el = {
 };
 
 let currentLightboxShot = null;
+let screenshotSelectionMode = false;
+let selectedScreenshotIds = new Set();
+let selectionRenderedForTabId = null; // switching note tabs exits selection mode
 
 function activeTab() {
   return state.tabs.find(t => t.id === state.activeTabId) || state.tabs[0];
@@ -1158,12 +1169,62 @@ el.notesArea.addEventListener("paste", async e => {
 
 /* ---------------- Screenshots ---------------- */
 
+function flashIconCopied(btn) {
+  const original = btn.title;
+  btn.classList.add("copied");
+  btn.title = "Copied";
+  setTimeout(() => {
+    btn.classList.remove("copied");
+    btn.title = original;
+  }, 1100);
+}
+
+async function copyScreenshotToClipboard(shot, btn) {
+  try {
+    const res = await fetch(shot.dataUrl);
+    const blob = await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    flashIconCopied(btn);
+  } catch {
+    btn.title = "Couldn't copy";
+  }
+}
+
+function toggleScreenshotSelected(id) {
+  if (selectedScreenshotIds.has(id)) selectedScreenshotIds.delete(id);
+  else selectedScreenshotIds.add(id);
+  renderScreenshots();
+}
+
 function renderScreenshots() {
   wireUndoButton(el.undoScreenshotBtn, "screenshot", e => e.tabId === state.activeTabId);
 
-  el.screenshotsStrip.innerHTML = "";
   const tab = activeTab();
+
+  // Switching note tabs exits selection mode — selected IDs from another
+  // tab's screenshots shouldn't silently carry over.
+  if (tab && tab.id !== selectionRenderedForTabId) {
+    screenshotSelectionMode = false;
+    selectedScreenshotIds.clear();
+  }
+  selectionRenderedForTabId = tab ? tab.id : null;
+
   const shots = tab ? tab.screenshots || [] : [];
+
+  el.selectScreenshotsBtn.classList.toggle("hidden", shots.length === 0);
+  el.screenshotsNormalActions.classList.toggle("hidden", screenshotSelectionMode);
+  el.screenshotsSelectActions.classList.toggle("hidden", !screenshotSelectionMode);
+  el.screenshotsStrip.classList.toggle("selecting", screenshotSelectionMode);
+
+  const selectedCount = shots.filter(s => selectedScreenshotIds.has(s.id)).length;
+  el.screenshotSelectionCount.textContent = `${selectedCount} selected`;
+  el.downloadSelectedScreenshotsBtn.disabled = selectedCount === 0;
+  el.deleteSelectedScreenshotsBtn.disabled = selectedCount === 0;
+  const allSelected = shots.length > 0 && selectedCount === shots.length;
+  el.selectAllScreenshotsBtn.title = allSelected ? "Deselect all" : "Select all";
+  el.selectAllScreenshotsBtn.classList.toggle("all-selected", allSelected);
+
+  el.screenshotsStrip.innerHTML = "";
 
   if (shots.length === 0) {
     const empty = document.createElement("div");
@@ -1174,14 +1235,109 @@ function renderScreenshots() {
   }
 
   shots.forEach(shot => {
-    const thumb = document.createElement("button");
+    const thumb = document.createElement("div");
     thumb.className = "screenshot-thumb";
+    if (selectedScreenshotIds.has(shot.id)) thumb.classList.add("selected");
+    thumb.tabIndex = 0;
+    thumb.setAttribute("role", "button");
     thumb.style.backgroundImage = `url("${shot.dataUrl}")`;
     thumb.title = new Date(shot.time).toLocaleString();
-    thumb.addEventListener("click", () => openLightbox(shot));
+
+    const check = document.createElement("span");
+    check.className = "thumb-check";
+    check.setAttribute("aria-hidden", "true");
+    thumb.appendChild(check);
+
+    const copyBtn = document.createElement("button");
+    copyBtn.type = "button";
+    copyBtn.className = "thumb-copy-btn";
+    copyBtn.title = "Copy image";
+    copyBtn.setAttribute("aria-label", "Copy image");
+    copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
+    copyBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      copyScreenshotToClipboard(shot, copyBtn);
+    });
+    thumb.appendChild(copyBtn);
+
+    function activate() {
+      if (screenshotSelectionMode) toggleScreenshotSelected(shot.id);
+      else openLightbox(shot);
+    }
+    thumb.addEventListener("click", activate);
+    thumb.addEventListener("keydown", e => {
+      if (e.key === "Enter" || e.key === " ") { e.preventDefault(); activate(); }
+    });
+
     el.screenshotsStrip.appendChild(thumb);
   });
 }
+
+el.selectScreenshotsBtn.addEventListener("click", () => {
+  screenshotSelectionMode = true;
+  selectedScreenshotIds.clear();
+  renderScreenshots();
+});
+
+el.cancelSelectScreenshotsBtn.addEventListener("click", () => {
+  screenshotSelectionMode = false;
+  selectedScreenshotIds.clear();
+  renderScreenshots();
+});
+
+el.selectAllScreenshotsBtn.addEventListener("click", () => {
+  const tab = activeTab();
+  const shots = tab ? tab.screenshots || [] : [];
+  const allSelected = shots.length > 0 && shots.every(s => selectedScreenshotIds.has(s.id));
+  if (allSelected) selectedScreenshotIds.clear();
+  else shots.forEach(s => selectedScreenshotIds.add(s.id));
+  renderScreenshots();
+});
+
+el.deleteSelectedScreenshotsBtn.addEventListener("click", async () => {
+  const tab = activeTab();
+  if (!tab) return;
+  const toDelete = (tab.screenshots || []).filter(s => selectedScreenshotIds.has(s.id));
+  if (!toDelete.length) return;
+  const ok = confirm(`Delete ${toDelete.length} screenshot${toDelete.length === 1 ? "" : "s"}? This can't be undone.`);
+  if (!ok) return;
+
+  const updatedTabs = state.tabs.map(t =>
+    t.id === tab.id ? { ...t, screenshots: (t.screenshots || []).filter(s => !selectedScreenshotIds.has(s.id)) } : t
+  );
+  await persist({ tabs: updatedTabs });
+  for (const shot of toDelete) {
+    const index = (tab.screenshots || []).findIndex(s => s.id === shot.id);
+    await trashItem({ type: "screenshot", screenshot: shot, tabId: tab.id, tabName: tab.name, index });
+  }
+  screenshotSelectionMode = false;
+  selectedScreenshotIds.clear();
+  renderScreenshots();
+  renderTrash();
+});
+
+el.downloadSelectedScreenshotsBtn.addEventListener("click", async () => {
+  const tab = activeTab();
+  if (!tab) return;
+  const toDownload = (tab.screenshots || []).filter(s => selectedScreenshotIds.has(s.id));
+  el.downloadSelectedScreenshotsBtn.disabled = true;
+  for (const shot of toDownload) {
+    const stamp = new Date(shot.time).toISOString().slice(0, 19).replace(/[:T]/g, "-");
+    try {
+      const res = await fetch(shot.dataUrl);
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      // No saveAs here (unlike the single-image lightbox download) — with
+      // several files, a save dialog per file would be unusable. These go
+      // straight to the default Downloads folder instead.
+      await chrome.downloads.download({ url, filename: `notedock-screenshot-${stamp}.png` });
+      setTimeout(() => URL.revokeObjectURL(url), 30000);
+    } catch {
+      /* one failed download shouldn't stop the rest */
+    }
+  }
+  el.downloadSelectedScreenshotsBtn.disabled = selectedScreenshotIds.size === 0;
+});
 
 el.captureBtn.addEventListener("click", async () => {
   const tab = activeTab();
