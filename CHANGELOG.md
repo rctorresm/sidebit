@@ -2,6 +2,22 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.8.0 — 2026-08-07
+
+- Fixed: "Save to sidebar" now appears for text highlighted inside a
+  form field (`<input>`/`<textarea>`) — e.g. a reply box or a data table
+  cell that's actually an editable field. The page's normal text
+  selection API can't see into form fields at all, so this reads the
+  field's own selection directly instead. (`type="password"` fields are
+  deliberately excluded.)
+- Fixed: the content script now runs inside embedded iframes too
+  (`all_frames: true`), so highlighting text inside an embedded
+  widget/dashboard (e.g. an Amazon Connect panel) works the same as the
+  main page.
+- Note: the Chrome Web Store itself is permanently off-limits to every
+  extension's content scripts — that's a Chrome-enforced restriction, not
+  something an extension can work around.
+
 ## 1.7.0 — 2026-08-07
 
 - Word/character counters: Notes shows a live count while typing; Saved

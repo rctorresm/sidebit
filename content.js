@@ -6,6 +6,45 @@
 (() => {
   let host = null;
   let hideTimer = null;
+  let lastMouseUp = { x: 0, y: 0 };
+
+  // Text-bearing input types where selectionStart/End are safe to read in
+  // Chrome (some types, e.g. number/date/color, throw). "password" is
+  // deliberately excluded — not offering to save that.
+  const TEXT_INPUT_TYPES = new Set(["text", "search", "url", "tel", "email", ""]);
+
+  // window.getSelection() only sees regular page text — it can't see into
+  // <input>/<textarea> values, since those keep their own separate
+  // selection model. This covers that gap by reading the focused field's
+  // own selection directly.
+  function getFormFieldSelection() {
+    const active = document.activeElement;
+    if (!active) return null;
+    const isTextarea = active.tagName === "TEXTAREA";
+    const isTextInput = active.tagName === "INPUT" && TEXT_INPUT_TYPES.has((active.type || "text").toLowerCase());
+    if (!isTextarea && !isTextInput) return null;
+
+    const start = active.selectionStart;
+    const end = active.selectionEnd;
+    if (start == null || end == null || start === end) return null;
+
+    const text = active.value.slice(start, end).trim();
+    if (!text) return null;
+
+    // Browsers don't expose per-character geometry for native form fields,
+    // so anchor the pill near the last mouse-up position if it's inside
+    // the field (mouse-driven selection), otherwise near the field itself
+    // (keyboard-driven selection, e.g. shift+arrow).
+    const fieldRect = active.getBoundingClientRect();
+    const mouseInField =
+      lastMouseUp.x >= fieldRect.left && lastMouseUp.x <= fieldRect.right &&
+      lastMouseUp.y >= fieldRect.top && lastMouseUp.y <= fieldRect.bottom;
+    const rect = mouseInField
+      ? { left: lastMouseUp.x, right: lastMouseUp.x, top: lastMouseUp.y, bottom: lastMouseUp.y }
+      : fieldRect;
+
+    return { text, rect };
+  }
 
   // Builds a URL that scrolls straight to the highlighted text when opened,
   // using the same text-fragment mechanism as Chrome's built-in "Copy link
@@ -103,6 +142,13 @@
   }
 
   function handleSelectionChange() {
+    const formSelection = getFormFieldSelection();
+    if (formSelection) {
+      if (formSelection.text.length > 4000) return; // avoid absurdly large blobs
+      showPill(formSelection.rect, formSelection.text);
+      return;
+    }
+
     const selection = window.getSelection();
     const text = selection && selection.toString().trim();
     if (!text || text.length < 1) {
@@ -120,7 +166,8 @@
     }
   }
 
-  document.addEventListener("mouseup", () => {
+  document.addEventListener("mouseup", e => {
+    lastMouseUp = { x: e.clientX, y: e.clientY };
     clearTimeout(hideTimer);
     hideTimer = setTimeout(handleSelectionChange, 10);
   });
