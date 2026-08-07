@@ -619,6 +619,7 @@ async function closeTab(tabId) {
   }
   await persist({ tabs: remaining, activeTabId: newActive });
   if (closedTab) await trashItem({ type: "tab", tab: closedTab, index: closedIndex });
+  notesQuipPickers.delete(tabId);
   renderAll();
 }
 
@@ -981,6 +982,17 @@ el.clearHighlightsBtn.addEventListener("click", async () => {
 
 /* ---------------- Notes ---------------- */
 
+// One quip picker per note tab, created lazily, so each tab's "no repeat
+// within a range" memory is independent of the others.
+const notesQuipPickers = new Map();
+
+function getNotesQuipPicker(tabId) {
+  if (!notesQuipPickers.has(tabId)) {
+    notesQuipPickers.set(tabId, createQuipPicker());
+  }
+  return notesQuipPickers.get(tabId);
+}
+
 function autoGrowNotes() {
   el.notesArea.style.height = "auto";
   el.notesArea.style.height = el.notesArea.scrollHeight + "px";
@@ -988,8 +1000,12 @@ function autoGrowNotes() {
 
 function updateNotesCounter() {
   const text = el.notesArea.value;
-  const words = countWords(text);
-  el.notesCounter.textContent = text ? `${words} word${words === 1 ? "" : "s"} · ${text.length} char${text.length === 1 ? "" : "s"}` : "";
+  const tab = activeTab();
+  if (!tab || !text) {
+    el.notesCounter.textContent = "";
+    return;
+  }
+  el.notesCounter.textContent = getNotesQuipPicker(tab.id).get(text.length);
 }
 
 function renderNotes() {

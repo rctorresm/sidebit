@@ -2,6 +2,18 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.15.0 — 2026-08-07
+
+- The Notes counter is now a movie-quip generator instead of a plain
+  word/char count. Every 25 characters (up to 1,000, then wider bands)
+  pulls a random line from a pool of Marvel, DC, Star Wars, Harry Potter,
+  Lord of the Rings/Hobbit, and Chuck Norris references — picked the
+  moment you cross into that length range, held steady while you keep
+  typing so it doesn't flicker every keystroke, and never repeating the
+  same line back-to-back for that specific range even if you bounce
+  across the boundary. Each note tab has its own independent quip memory.
+  Purely cosmetic — no data collected, nothing sent anywhere.
+
 ## 1.14.0 — 2026-08-07
 
 - New defaults for first install: Light theme, Medium text, System font
