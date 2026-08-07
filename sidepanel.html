@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>NoteDock</title>
+<link rel="stylesheet" href="sidepanel.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="brand-mark">
+        <path d="M4 4h16v12H7l-3 3V4z"></path>
+      </svg>
+      <span>NoteDock</span>
+    </div>
+  </header>
+
+  <nav class="tabs-row" id="tabsRow">
+    <!-- note tabs injected here -->
+  </nav>
+  <button class="new-tab-btn" id="newTabBtn" title="Start a new note">+ New note</button>
+
+  <section class="panel snippets-panel">
+    <div class="panel-head">
+      <h2>Quick copy</h2>
+      <button class="icon-btn" id="toggleEditSnippets" title="Manage snippets">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 20h9"></path>
+          <path d="M16.5 3.5a2.12 2.12 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+        </svg>
+      </button>
+    </div>
+    <div id="snippetsList" class="snippets-list"></div>
+    <div id="addSnippetRow" class="add-snippet-row hidden">
+      <input type="text" id="newSnippetLabel" placeholder="Label (e.g. Support line)" />
+      <input type="text" id="newSnippetValue" placeholder="Value to copy" />
+      <button id="addSnippetBtn" class="small-btn">Add</button>
+    </div>
+  </section>
+
+  <section class="panel highlights-panel">
+    <div class="panel-head">
+      <h2>Saved from pages</h2>
+    </div>
+    <div id="highlightsList" class="highlights-list"></div>
+  </section>
+
+  <section class="panel notes-panel">
+    <div class="panel-head">
+      <h2>Notes</h2>
+      <span id="saveIndicator" class="save-indicator"></span>
+    </div>
+    <textarea id="notesArea" placeholder="Notes for this one..."></textarea>
+  </section>
+
+  <script src="sidepanel.js"></script>
+</body>
+</html>
