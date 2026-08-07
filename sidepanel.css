@@ -447,6 +447,8 @@ a.highlight-source:hover {
 }
 .font-btn.active .font-name { color: var(--text); }
 
+.backup-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
 .bg-preview-row { display: flex; align-items: center; gap: 10px; }
 .bg-preview {
   width: 56px;

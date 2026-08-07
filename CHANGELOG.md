@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.3.0 — 2026-08-07
+
+- Settings: Export data downloads everything (tabs, snippets, settings) as
+  a dated JSON backup file. Import data restores from one, after a
+  confirmation since it replaces everything currently stored. Clarifies
+  that `chrome.storage.local` already survives browser/computer restarts
+  on its own — this is insurance against uninstall, profile loss, or
+  moving to a new machine, not a "save button" for day-to-day use.
+
 ## 1.2.1 — 2026-08-07
 
 - "Saved from pages" panel: added a Delete All action (with confirmation)

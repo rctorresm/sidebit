@@ -40,7 +40,10 @@ const el = {
   bgPreview: document.getElementById("bgPreview"),
   bgFileInput: document.getElementById("bgFileInput"),
   removeBgBtn: document.getElementById("removeBgBtn"),
-  bgStatus: document.getElementById("bgStatus")
+  bgStatus: document.getElementById("bgStatus"),
+  exportDataBtn: document.getElementById("exportDataBtn"),
+  importDataInput: document.getElementById("importDataInput"),
+  backupStatus: document.getElementById("backupStatus")
 };
 
 function activeTab() {
@@ -228,6 +231,84 @@ el.bgFileInput.addEventListener("change", async () => {
     el.bgStatus.classList.add("error");
   } finally {
     el.bgFileInput.value = "";
+  }
+});
+
+el.exportDataBtn.addEventListener("click", () => {
+  const backup = {
+    noteDockBackup: 1,
+    exportedAt: new Date().toISOString(),
+    tabs: state.tabs,
+    activeTabId: state.activeTabId,
+    snippets: state.snippets,
+    settings: state.settings
+  };
+  const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const dateStamp = backup.exportedAt.slice(0, 10);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `notedock-backup-${dateStamp}.json`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  el.backupStatus.classList.remove("error");
+  el.backupStatus.textContent = "Backup downloaded.";
+  setTimeout(() => { el.backupStatus.textContent = ""; }, 1800);
+});
+
+function isValidBackupShape(data) {
+  return data
+    && Array.isArray(data.tabs)
+    && data.tabs.every(t => t && typeof t.id === "string" && typeof t.name === "string")
+    && (data.snippets === undefined || Array.isArray(data.snippets));
+}
+
+el.importDataInput.addEventListener("change", async () => {
+  const file = el.importDataInput.files && el.importDataInput.files[0];
+  if (!file) return;
+  el.backupStatus.classList.remove("error");
+  try {
+    const text = await file.text();
+    const data = JSON.parse(text);
+    if (!isValidBackupShape(data)) {
+      throw new Error("That file doesn't look like a NoteDock backup.");
+    }
+    const tabCount = data.tabs.length;
+    const ok = confirm(
+      `Import ${tabCount} note tab${tabCount === 1 ? "" : "s"} from this backup? ` +
+      `This replaces everything currently in NoteDock — that can't be undone.`
+    );
+    if (!ok) {
+      el.backupStatus.textContent = "";
+      return;
+    }
+
+    const tabs = data.tabs.map(t => ({
+      id: t.id,
+      name: t.name || "Note",
+      notes: typeof t.notes === "string" ? t.notes : "",
+      highlights: Array.isArray(t.highlights) ? t.highlights : []
+    }));
+    const activeTabId = tabs.some(t => t.id === data.activeTabId) ? data.activeTabId : (tabs[0] && tabs[0].id) || null;
+    const snippets = Array.isArray(data.snippets) ? data.snippets : [];
+    const settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings && typeof data.settings === "object" ? data.settings : {});
+
+    await persist({ tabs, activeTabId, snippets, settings });
+    applyTheme(settings.theme);
+    applyBackground(settings.backgroundImage);
+    applyFont(settings.font);
+    applyTextScale(settings.textSize);
+    renderAll();
+
+    el.backupStatus.textContent = "Backup imported.";
+    setTimeout(() => { el.backupStatus.textContent = ""; }, 1800);
+  } catch (err) {
+    el.backupStatus.textContent = err && err.message ? err.message : "Couldn't read that backup file.";
+    el.backupStatus.classList.add("error");
+  } finally {
+    el.importDataInput.value = "";
   }
 });
 
