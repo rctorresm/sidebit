@@ -4,6 +4,16 @@
 // selection. Everything is torn down again as soon as it's not needed.
 
 (() => {
+  // When the extension updates, background.js re-injects this file into
+  // already-open tabs so users don't have to manually refresh a page
+  // they can't afford to reload (e.g. a call-center agent mid-call).
+  // That means this IIFE can run more than once in the same page/frame —
+  // tear down whatever the previous instance attached first, so listeners
+  // never double up.
+  if (window.__noteDockCleanup) {
+    try { window.__noteDockCleanup(); } catch { /* ignore */ }
+  }
+
   let host = null;
   let hideTimer = null;
   let lastMouseUp = { x: 0, y: 0 };
@@ -161,22 +171,40 @@
     }
   }
 
-  document.addEventListener("mouseup", e => {
+  function onMouseUp(e) {
     lastMouseUp = { x: e.clientX, y: e.clientY };
     clearTimeout(hideTimer);
     hideTimer = setTimeout(handleSelectionChange, 10);
-  });
-  document.addEventListener("keyup", e => {
+  }
+  function onKeyUp(e) {
     if (e.shiftKey || e.key === "Shift") {
       clearTimeout(hideTimer);
       hideTimer = setTimeout(handleSelectionChange, 10);
     }
-  });
-  document.addEventListener("scroll", removePill, true);
-  document.addEventListener("mousedown", e => {
+  }
+  function onScroll() {
+    removePill();
+  }
+  function onMouseDown(e) {
     if (host && !host.contains(e.target)) removePill();
-  });
-  document.addEventListener("keydown", e => {
+  }
+  function onKeyDown(e) {
     if (e.key === "Escape") removePill();
-  });
+  }
+
+  document.addEventListener("mouseup", onMouseUp);
+  document.addEventListener("keyup", onKeyUp);
+  document.addEventListener("scroll", onScroll, true);
+  document.addEventListener("mousedown", onMouseDown);
+  document.addEventListener("keydown", onKeyDown);
+
+  window.__noteDockCleanup = () => {
+    clearTimeout(hideTimer);
+    removePill();
+    document.removeEventListener("mouseup", onMouseUp);
+    document.removeEventListener("keyup", onKeyUp);
+    document.removeEventListener("scroll", onScroll, true);
+    document.removeEventListener("mousedown", onMouseDown);
+    document.removeEventListener("keydown", onKeyDown);
+  };
 })();

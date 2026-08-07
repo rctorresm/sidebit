@@ -2,6 +2,20 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.13.0 — 2026-08-07
+
+- No more manual page refresh after a NoteDock update: when the
+  extension updates, it now automatically re-injects the new
+  `content.js` into every already-open tab (and their frames), so a
+  page you can't afford to reload — e.g. a call-center agent's softphone
+  running inside a CRM tab — picks up the fix without navigating away.
+  New `scripting` permission, used only for this.
+- content.js is now safe to inject more than once into the same page:
+  it tears down its previous listeners/pill before attaching new ones,
+  so re-injection on update can't cause duplicate pills or double-saved
+  highlights. Verified directly: injecting twice in the same page still
+  produces exactly one pill and exactly one save call.
+
 ## 1.12.0 — 2026-08-07
 
 - Saved from pages is now collapsible, same pattern as Quick copy

@@ -11,7 +11,7 @@ function defaultTab(n) {
 
 // First install: seed one blank note tab so there's somewhere to type —
 // no example snippets or placeholder content. Everything starts empty.
-chrome.runtime.onInstalled.addListener(async () => {
+chrome.runtime.onInstalled.addListener(async details => {
   const existing = await chrome.storage.local.get(["tabs", "snippets", "activeTabId", "settings"]);
   if (!existing.tabs || existing.tabs.length === 0) {
     const firstTab = defaultTab(1);
@@ -23,8 +23,35 @@ chrome.runtime.onInstalled.addListener(async () => {
   }
   if (!existing.settings) {
     await chrome.storage.local.set({
-      settings: { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false }
+      settings: {
+        theme: "dark",
+        backgroundImage: null,
+        font: "system",
+        textSize: "medium",
+        quickCopyCollapsed: false,
+        savedPagesCollapsed: false
+      }
     });
+  }
+
+  // On update, re-inject the new content.js into tabs that were already
+  // open — otherwise they'd keep running the old version until manually
+  // refreshed, which isn't an option for e.g. a call-center agent mid-call
+  // on a page hosting their softphone.
+  if (details.reason === "update") {
+    const tabs = await chrome.tabs.query({});
+    for (const tab of tabs) {
+      if (!tab.id) continue;
+      try {
+        await chrome.scripting.executeScript({
+          target: { tabId: tab.id, allFrames: true },
+          files: ["content.js"]
+        });
+      } catch {
+        // Not injectable (chrome://, the Web Store, a not-yet-loaded tab,
+        // another extension's page, etc.) — skip it silently.
+      }
+    }
   }
 });
 
