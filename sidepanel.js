@@ -52,7 +52,11 @@ const el = {
   lightboxDownloadBtn: document.getElementById("lightboxDownloadBtn"),
   lightboxCopyBtn: document.getElementById("lightboxCopyBtn"),
   lightboxDeleteBtn: document.getElementById("lightboxDeleteBtn"),
-  lightboxStatus: document.getElementById("lightboxStatus")
+  lightboxStatus: document.getElementById("lightboxStatus"),
+  searchToggleBtn: document.getElementById("searchToggleBtn"),
+  searchBar: document.getElementById("searchBar"),
+  searchInput: document.getElementById("searchInput"),
+  searchResults: document.getElementById("searchResults")
 };
 
 let currentLightboxShot = null;
@@ -372,6 +376,7 @@ function renderTabs() {
   state.tabs.forEach(tab => {
     const row = document.createElement("div");
     row.className = "note-tab" + (tab.id === state.activeTabId ? " active" : "");
+    row.dataset.tabId = tab.id;
 
     const label = document.createElement("span");
     label.textContent = tab.name;
@@ -468,6 +473,7 @@ function renderSnippets() {
   state.snippets.forEach(snippet => {
     const row = document.createElement("div");
     row.className = "snippet-row" + (editingSnippets ? " edit-mode" : "");
+    row.dataset.snippetId = snippet.id;
 
     if (editingSnippets) {
       const handle = document.createElement("span");
@@ -623,6 +629,7 @@ function renderHighlights() {
   highlights.forEach(h => {
     const row = document.createElement("div");
     row.className = "highlight-row";
+    row.dataset.highlightId = h.id;
 
     const text = document.createElement("p");
     text.className = "highlight-text";
@@ -817,6 +824,223 @@ el.lightboxDeleteBtn.addEventListener("click", async () => {
   await persist({ tabs: updatedTabs });
   renderScreenshots();
   closeLightbox();
+});
+
+/* ---------------- Search ---------------- */
+
+const SEARCH_MAX_PER_GROUP = 8;
+
+function buildSearchResults(rawQuery) {
+  const q = rawQuery.trim().toLowerCase();
+  if (!q) return { tabs: [], snippets: [], highlights: [] };
+
+  const tabs = state.tabs
+    .filter(t => t.name.toLowerCase().includes(q) || (t.notes || "").toLowerCase().includes(q))
+    .map(t => ({ tab: t, matchedNotes: !t.name.toLowerCase().includes(q) && (t.notes || "").toLowerCase().includes(q) }));
+
+  const snippets = state.snippets.filter(s =>
+    s.label.toLowerCase().includes(q) || s.value.toLowerCase().includes(q)
+  );
+
+  const highlights = [];
+  state.tabs.forEach(t => {
+    (t.highlights || []).forEach(h => {
+      const hay = `${h.text} ${h.source || ""} ${h.title || ""}`.toLowerCase();
+      if (hay.includes(q)) highlights.push({ tab: t, highlight: h });
+    });
+  });
+
+  return { tabs, snippets, highlights };
+}
+
+function excerpt(text, q, radius) {
+  const hay = text.toLowerCase();
+  const idx = hay.indexOf(q.toLowerCase());
+  if (idx === -1) return text.slice(0, radius * 2);
+  const start = Math.max(0, idx - radius);
+  const end = Math.min(text.length, idx + q.length + radius);
+  return (start > 0 ? "…" : "") + text.slice(start, end) + (end < text.length ? "…" : "");
+}
+
+// Builds text nodes around a <mark>, never HTML — safe for page-derived text.
+function highlightMatch(text, q) {
+  const frag = document.createDocumentFragment();
+  const idx = text.toLowerCase().indexOf(q.toLowerCase());
+  if (idx === -1 || !q) {
+    frag.appendChild(document.createTextNode(text));
+    return frag;
+  }
+  frag.appendChild(document.createTextNode(text.slice(0, idx)));
+  const mark = document.createElement("mark");
+  mark.className = "search-mark";
+  mark.textContent = text.slice(idx, idx + q.length);
+  frag.appendChild(mark);
+  frag.appendChild(document.createTextNode(text.slice(idx + q.length)));
+  return frag;
+}
+
+function flashElement(target) {
+  if (!target) return;
+  target.classList.add("search-flash");
+  setTimeout(() => target.classList.remove("search-flash"), 1200);
+}
+
+function closeSearch() {
+  el.searchBar.classList.add("hidden");
+  el.searchInput.value = "";
+  el.searchResults.innerHTML = "";
+  el.searchResults.classList.add("hidden");
+}
+
+async function selectTabResult(tabId, query) {
+  const switching = tabId !== state.activeTabId;
+  if (switching) {
+    await persist({ activeTabId: tabId });
+    renderAll();
+  }
+  closeSearch();
+  const tab = state.tabs.find(t => t.id === tabId);
+  const notes = (tab && tab.notes) || "";
+  const idx = query ? notes.toLowerCase().indexOf(query.toLowerCase()) : -1;
+  requestAnimationFrame(() => {
+    if (idx !== -1) {
+      el.notesArea.focus();
+      el.notesArea.setSelectionRange(idx, idx + query.length);
+      el.notesArea.scrollIntoView({ block: "center", behavior: "smooth" });
+    } else {
+      const row = el.tabsRow.querySelector(`[data-tab-id="${tabId}"]`);
+      if (row) row.scrollIntoView({ block: "nearest", inline: "center", behavior: "smooth" });
+      flashElement(row);
+    }
+  });
+}
+
+function selectSnippetResult(snippetId) {
+  closeSearch();
+  requestAnimationFrame(() => {
+    const row = el.snippetsList.querySelector(`[data-snippet-id="${snippetId}"]`);
+    if (row) {
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+      flashElement(row);
+    }
+  });
+}
+
+async function selectHighlightResult(tabId, highlightId) {
+  if (tabId !== state.activeTabId) {
+    await persist({ activeTabId: tabId });
+    renderAll();
+  }
+  closeSearch();
+  requestAnimationFrame(() => {
+    const row = el.highlightsList.querySelector(`[data-highlight-id="${highlightId}"]`);
+    if (row) {
+      row.scrollIntoView({ block: "center", behavior: "smooth" });
+      flashElement(row);
+    }
+  });
+}
+
+function renderSearchResults(rawQuery) {
+  const q = rawQuery.trim();
+  el.searchResults.innerHTML = "";
+
+  if (!q) {
+    el.searchResults.classList.add("hidden");
+    return;
+  }
+
+  const results = buildSearchResults(q);
+  const total = results.tabs.length + results.snippets.length + results.highlights.length;
+
+  if (total === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state search-empty";
+    empty.textContent = `No matches for "${q}".`;
+    el.searchResults.appendChild(empty);
+    el.searchResults.classList.remove("hidden");
+    return;
+  }
+
+  function addGroup(label, items, renderItem) {
+    if (!items.length) return;
+    const heading = document.createElement("div");
+    heading.className = "search-group-label";
+    heading.textContent = label;
+    el.searchResults.appendChild(heading);
+    items.slice(0, SEARCH_MAX_PER_GROUP).forEach(renderItem);
+    if (items.length > SEARCH_MAX_PER_GROUP) {
+      const more = document.createElement("div");
+      more.className = "search-more";
+      more.textContent = `+${items.length - SEARCH_MAX_PER_GROUP} more — refine your search`;
+      el.searchResults.appendChild(more);
+    }
+  }
+
+  addGroup("Note tabs", results.tabs, ({ tab, matchedNotes }) => {
+    const row = document.createElement("button");
+    row.className = "search-result";
+    const title = document.createElement("div");
+    title.className = "search-result-title";
+    title.appendChild(highlightMatch(tab.name, q));
+    const sub = document.createElement("div");
+    sub.className = "search-result-sub";
+    sub.textContent = matchedNotes ? excerpt(tab.notes, q, 40) : "Note tab";
+    row.appendChild(title);
+    row.appendChild(sub);
+    row.addEventListener("click", () => selectTabResult(tab.id, q));
+    el.searchResults.appendChild(row);
+  });
+
+  addGroup("Quick copy", results.snippets, snippet => {
+    const row = document.createElement("button");
+    row.className = "search-result";
+    const title = document.createElement("div");
+    title.className = "search-result-title";
+    title.appendChild(highlightMatch(snippet.label, q));
+    const sub = document.createElement("div");
+    sub.className = "search-result-sub";
+    sub.textContent = snippet.value;
+    row.appendChild(title);
+    row.appendChild(sub);
+    row.addEventListener("click", () => selectSnippetResult(snippet.id));
+    el.searchResults.appendChild(row);
+  });
+
+  addGroup("Saved from pages", results.highlights, ({ tab, highlight }) => {
+    const row = document.createElement("button");
+    row.className = "search-result";
+    const title = document.createElement("div");
+    title.className = "search-result-title";
+    title.appendChild(highlightMatch(excerpt(highlight.text, q, 40), q));
+    const sub = document.createElement("div");
+    sub.className = "search-result-sub";
+    sub.textContent = `${tab.name} · ${highlight.source || ""}`;
+    row.appendChild(title);
+    row.appendChild(sub);
+    row.addEventListener("click", () => selectHighlightResult(tab.id, highlight.id));
+    el.searchResults.appendChild(row);
+  });
+
+  el.searchResults.classList.remove("hidden");
+}
+
+el.searchToggleBtn.addEventListener("click", () => {
+  if (el.searchBar.classList.contains("hidden")) {
+    el.searchBar.classList.remove("hidden");
+    el.searchInput.focus();
+  } else {
+    closeSearch();
+  }
+});
+
+el.searchInput.addEventListener("input", () => renderSearchResults(el.searchInput.value));
+
+el.searchInput.addEventListener("keydown", e => {
+  if (e.key === "Escape") {
+    closeSearch();
+    el.searchToggleBtn.focus();
+  }
 });
 
 loadState();

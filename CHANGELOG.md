@@ -2,6 +2,14 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.5.0 — 2026-08-07
+
+- Global search (magnifying-glass icon in the header): searches note tab
+  names/notes, quick-copy snippets, and saved highlights all at once,
+  grouped results with the matched text marked. Clicking a result jumps to
+  it — switches note tab if needed, selects the matched text in Notes,
+  or scrolls to and briefly highlights the matching snippet/highlight row.
+
 ## 1.4.0 — 2026-08-07
 
 - Screenshots: a Capture button at the bottom of Notes grabs the visible
