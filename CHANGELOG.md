@@ -2,6 +2,27 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.7.0 — 2026-08-07
+
+- Word/character counters: Notes shows a live count while typing; Saved
+  from pages shows a running total ("3 items · 187 words") for the active
+  note.
+- Notes now auto-grows with content instead of stretching to fill the
+  panel — starts around 4 lines, grows up to ~25 lines, then scrolls
+  internally past that. Screenshots (which live below Notes in the same
+  panel) get pushed down as Notes grows, with the page scrolling normally
+  once everything doesn't fit.
+- Quick copy: collapsible (chevron next to the pencil, remembers your
+  preference) and rows are more compact. A hover/focus "i" info tooltip
+  was added to Quick copy, Saved from pages, Notes, and Screenshots,
+  explaining what each section is for.
+- Quick copy's edit-mode value field is now an auto-growing textarea
+  (paragraph-friendly) instead of a single-line input that scrolled
+  sideways; the read-only preview afterward is unchanged.
+- First install no longer seeds example snippets ("Support line",
+  "Documents team email") — Quick copy starts empty. Still seeds one
+  blank note tab so there's somewhere to type.
+
 ## 1.6.0 — 2026-08-07
 
 - Recently Deleted (Settings > Recently deleted): closing a note tab,

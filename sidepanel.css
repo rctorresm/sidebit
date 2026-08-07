@@ -282,6 +282,72 @@ body.has-bg-image .bg-backdrop::after {
   letter-spacing: 0.06em;
   color: var(--text-faint);
 }
+.panel-head-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  flex: 1;
+}
+.panel-head-actions { display: flex; align-items: center; gap: 2px; flex: none; }
+
+.counter-text {
+  font-size: calc(10px * var(--text-scale));
+  color: var(--text-faint);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Info tooltip ("i" in a circle) */
+.info-wrap { position: relative; display: inline-flex; flex: none; }
+.info-btn {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid var(--text-faint);
+  background: none;
+  color: var(--text-faint);
+  font-size: 9px;
+  font-style: italic;
+  font-family: Georgia, "Times New Roman", serif;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: help;
+  padding: 0;
+  flex: none;
+}
+.info-btn:hover, .info-btn:focus-visible { color: var(--accent); border-color: var(--accent); outline: none; }
+.info-tooltip {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  width: 220px;
+  max-width: 60vw;
+  background: var(--surface-2);
+  border: 1px solid var(--border-strong);
+  border-radius: 8px;
+  padding: 9px 10px;
+  font-size: calc(11px * var(--text-scale));
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: normal;
+  line-height: 1.5;
+  color: var(--text-dim);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+  z-index: 45;
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 120ms ease;
+  pointer-events: none;
+}
+.info-wrap:hover .info-tooltip,
+.info-wrap:focus-within .info-tooltip {
+  visibility: visible;
+  opacity: 1;
+}
 
 .icon-btn {
   background: none;
@@ -298,13 +364,18 @@ body.has-bg-image .bg-backdrop::after {
 
 /* Snippets */
 .snippets-panel { max-height: 220px; display: flex; flex-direction: column; }
-.snippets-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
+.snippets-body { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.snippets-body.hidden { display: none; }
+.snippets-list { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
+
+#toggleCollapseSnippets svg { transition: transform 150ms ease; }
+#toggleCollapseSnippets.collapsed svg { transform: rotate(-90deg); }
 
 .snippet-row {
   display: flex;
   align-items: center;
   gap: 8px;
-  padding: 7px 8px;
+  padding: 5px 8px;
   border-radius: var(--radius);
   background: var(--surface-2);
   border: 1px solid transparent;
@@ -333,8 +404,9 @@ body.has-bg-image .bg-backdrop::after {
 .copy-btn:hover { color: var(--text); border-color: var(--accent-dim); }
 .copy-btn.copied { background: var(--success-bg); color: var(--success); border-color: var(--success); }
 
-.snippet-row.edit-mode { flex-wrap: wrap; }
-.snippet-row.edit-mode input {
+.snippet-row.edit-mode { flex-wrap: wrap; align-items: flex-start; }
+.snippet-row.edit-mode input,
+.snippet-row.edit-mode textarea {
   background: var(--surface);
   border: 1px solid var(--border-strong);
   color: var(--text);
@@ -344,6 +416,14 @@ body.has-bg-image .bg-backdrop::after {
 }
 .snippet-row.edit-mode .snippet-label-input { flex: 1; min-width: 90px; }
 .snippet-row.edit-mode .snippet-value-input { flex: 1.4; min-width: 110px; }
+.snippet-row.edit-mode textarea.snippet-value-input {
+  resize: none;
+  min-height: 1.6em;
+  max-height: 8em;
+  overflow-y: auto;
+  line-height: 1.4;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+}
 
 .drag-handle {
   flex: none;
@@ -446,16 +526,22 @@ a.highlight-source:hover {
 }
 
 /* Notes */
-.notes-panel { flex: 1; display: flex; flex-direction: column; min-height: 140px; }
+.notes-panel { flex: none; display: flex; flex-direction: column; }
 .save-indicator {
   font-size: calc(10.5px * var(--text-scale));
   color: var(--success);
   opacity: 0;
   transition: opacity 200ms ease;
+  flex: none;
 }
 .save-indicator.visible { opacity: 1; }
 #notesArea {
-  flex: 1;
+  /* Grows with content (JS sets height on input) between a ~4-line floor
+     and a ~25-line ceiling, in em so it scales with the text-size setting;
+     past the ceiling it scrolls internally instead of growing further. */
+  min-height: 6em;
+  max-height: 37.5em;
+  overflow-y: auto;
   resize: none;
   background: var(--surface-2);
   border: 1px solid var(--border);

@@ -9,8 +9,8 @@ function defaultTab(n) {
   return { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [] };
 }
 
-// First install: seed with one example tab and one example snippet so the
-// panel isn't blank, but everything is editable/removable immediately.
+// First install: seed one blank note tab so there's somewhere to type —
+// no example snippets or placeholder content. Everything starts empty.
 chrome.runtime.onInstalled.addListener(async () => {
   const existing = await chrome.storage.local.get(["tabs", "snippets", "activeTabId", "settings"]);
   if (!existing.tabs || existing.tabs.length === 0) {
@@ -18,17 +18,12 @@ chrome.runtime.onInstalled.addListener(async () => {
     await chrome.storage.local.set({
       tabs: [firstTab],
       activeTabId: firstTab.id,
-      snippets: existing.snippets && existing.snippets.length
-        ? existing.snippets
-        : [
-            { id: uid(), label: "Support line", value: "1-800-555-0100" },
-            { id: uid(), label: "Documents team email", value: "documents@example.com" }
-          ]
+      snippets: existing.snippets || []
     });
   }
   if (!existing.settings) {
     await chrome.storage.local.set({
-      settings: { theme: "dark", backgroundImage: null, font: "system", textSize: "medium" }
+      settings: { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false }
     });
   }
 });

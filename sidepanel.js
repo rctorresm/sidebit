@@ -1,6 +1,11 @@
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium" };
+function countWords(text) {
+  const trimmed = (text || "").trim();
+  return trimmed ? trimmed.split(/\s+/).length : 0;
+}
+
+const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false };
 
 // Three self-contained, universally pre-installed fonts chosen for on-screen
 // readability — no bundled font files, no CSP/network concerns.
@@ -22,15 +27,19 @@ let systemThemeQuery = null;
 const el = {
   tabsRow: document.getElementById("tabsRow"),
   newTabBtn: document.getElementById("newTabBtn"),
+  snippetsBody: document.getElementById("snippetsBody"),
   snippetsList: document.getElementById("snippetsList"),
+  toggleCollapseSnippets: document.getElementById("toggleCollapseSnippets"),
   toggleEditSnippets: document.getElementById("toggleEditSnippets"),
   addSnippetRow: document.getElementById("addSnippetRow"),
   newSnippetLabel: document.getElementById("newSnippetLabel"),
   newSnippetValue: document.getElementById("newSnippetValue"),
   addSnippetBtn: document.getElementById("addSnippetBtn"),
   highlightsList: document.getElementById("highlightsList"),
+  highlightsCounter: document.getElementById("highlightsCounter"),
   clearHighlightsBtn: document.getElementById("clearHighlightsBtn"),
   notesArea: document.getElementById("notesArea"),
+  notesCounter: document.getElementById("notesCounter"),
   saveIndicator: document.getElementById("saveIndicator"),
   settingsBtn: document.getElementById("settingsBtn"),
   settingsModal: document.getElementById("settingsModal"),
@@ -603,6 +612,11 @@ function flashCopied(btn) {
 }
 
 function renderSnippets() {
+  const collapsed = !!state.settings.quickCopyCollapsed;
+  el.snippetsBody.classList.toggle("hidden", collapsed);
+  el.toggleCollapseSnippets.classList.toggle("collapsed", collapsed);
+  el.toggleCollapseSnippets.title = collapsed ? "Expand Quick copy" : "Collapse Quick copy";
+
   el.snippetsList.innerHTML = "";
 
   if (state.snippets.length === 0 && !editingSnippets) {
@@ -661,10 +675,17 @@ function renderSnippets() {
       labelInput.value = snippet.label;
       labelInput.placeholder = "Label";
 
-      const valueInput = document.createElement("input");
+      const valueInput = document.createElement("textarea");
       valueInput.className = "snippet-value-input";
+      valueInput.rows = 1;
       valueInput.value = snippet.value;
       valueInput.placeholder = "Value";
+      const autoGrowValue = () => {
+        valueInput.style.height = "auto";
+        valueInput.style.height = valueInput.scrollHeight + "px";
+      };
+      valueInput.addEventListener("input", autoGrowValue);
+      requestAnimationFrame(autoGrowValue);
 
       const commitEdit = async () => {
         const updated = state.snippets.map(s =>
@@ -730,10 +751,20 @@ function trashIcon() {
   </svg>`;
 }
 
-el.toggleEditSnippets.addEventListener("click", () => {
+el.toggleEditSnippets.addEventListener("click", async () => {
   editingSnippets = !editingSnippets;
   el.toggleEditSnippets.classList.toggle("active", editingSnippets);
   el.addSnippetRow.classList.toggle("hidden", !editingSnippets);
+  // Editing a collapsed list doesn't make sense — expand it first.
+  if (editingSnippets && state.settings.quickCopyCollapsed) {
+    await persist({ settings: { ...state.settings, quickCopyCollapsed: false } });
+  }
+  renderSnippets();
+});
+
+el.toggleCollapseSnippets.addEventListener("click", async () => {
+  const quickCopyCollapsed = !state.settings.quickCopyCollapsed;
+  await persist({ settings: { ...state.settings, quickCopyCollapsed } });
   renderSnippets();
 });
 
@@ -764,12 +795,16 @@ function renderHighlights() {
   el.clearHighlightsBtn.classList.toggle("hidden", highlights.length === 0);
 
   if (highlights.length === 0) {
+    el.highlightsCounter.textContent = "";
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.textContent = "Highlight text on any page, then click \u201cSave to sidebar\u201d to collect it here for this note.";
     el.highlightsList.appendChild(empty);
     return;
   }
+
+  const totalWords = highlights.reduce((sum, h) => sum + countWords(h.text), 0);
+  el.highlightsCounter.textContent = `${highlights.length} item${highlights.length === 1 ? "" : "s"} \u00b7 ${totalWords} word${totalWords === 1 ? "" : "s"}`;
 
   highlights.forEach(h => {
     const row = document.createElement("div");
@@ -849,15 +884,30 @@ el.clearHighlightsBtn.addEventListener("click", async () => {
 
 /* ---------------- Notes ---------------- */
 
+function autoGrowNotes() {
+  el.notesArea.style.height = "auto";
+  el.notesArea.style.height = el.notesArea.scrollHeight + "px";
+}
+
+function updateNotesCounter() {
+  const text = el.notesArea.value;
+  const words = countWords(text);
+  el.notesCounter.textContent = text ? `${words} word${words === 1 ? "" : "s"} · ${text.length} char${text.length === 1 ? "" : "s"}` : "";
+}
+
 function renderNotes() {
   const tab = activeTab();
   const value = tab ? tab.notes || "" : "";
   if (document.activeElement !== el.notesArea) {
     el.notesArea.value = value;
   }
+  autoGrowNotes();
+  updateNotesCounter();
 }
 
 el.notesArea.addEventListener("input", () => {
+  autoGrowNotes();
+  updateNotesCounter();
   clearTimeout(notesSaveTimer);
   notesSaveTimer = setTimeout(async () => {
     const tab = activeTab();
