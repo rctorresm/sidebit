@@ -1,0 +1,121 @@
+# Chrome Web Store submission — copy-paste reference
+
+Not part of the extension itself — this is reference text for filling out
+the Chrome Web Store Developer Dashboard's submission form. Keep it out of
+the packaged zip.
+
+## Single purpose description
+
+> NoteDock is a side-panel note-taking tool. It lets users keep notes,
+> quick-copy snippets, highlighted text, and screenshots organized in one
+> place while browsing, without leaving the current tab.
+
+## Store listing — short description (132 char max)
+
+> Always-on side panel for notes, quick-copy snippets, and saving
+> highlighted text or screenshots from any page.
+
+## Store listing — detailed description
+
+> NoteDock is a Chrome side panel for keeping notes docked open while you
+> browse.
+>
+> - Separate note tabs for whatever you're working on — pin the ones you
+>   use often, drag to reorder
+> - Quick-copy snippets, either available everywhere or scoped to a single
+>   tab
+> - Highlight text on any page and save it to your notes in one click,
+>   with a link back to the source
+> - Capture a screenshot of the current tab, or paste one from your OS's
+>   own screenshot tool — it's organized into a gallery automatically
+> - Global search across everything you've saved
+> - A Recently Deleted trash with undo, per section
+> - Export/import your data as a backup file
+>
+> NoteDock stores everything locally in your browser. It makes no network
+> requests, has no account or sign-in, and does not collect, transmit, or
+> sell any data. See the full privacy policy for details.
+>
+> Built to be job-agnostic — "note" tabs are generic containers for
+> whatever you're focused on, not tied to any specific workflow.
+
+## Privacy policy URL
+
+> https://claude.ai/code/artifact/75fc2ca2-2612-4480-8720-53e04043608c
+
+(Or your own hosted copy — see note in the chat about publishing this
+somewhere under your own control long-term.)
+
+## Permission justifications
+
+**storage**
+> Used to save the user's notes, quick-copy snippets, saved highlights,
+> screenshots, and settings locally via chrome.storage.local. No data
+> leaves the device.
+
+**unlimitedStorage**
+> Screenshots are stored as uncompressed PNG image data and can add up
+> quickly. This permission lifts Chrome's default per-extension storage
+> quota so saving several screenshots doesn't silently fail once the
+> default cap is hit.
+
+**sidePanel**
+> NoteDock's entire UI lives in Chrome's native side panel (via the
+> chrome.sidePanel API) rather than a popup, so notes stay visible and
+> persist across tab switches while the user browses.
+
+**downloads**
+> Powers the "Download" button on saved screenshots, letting the user
+> save a copy of a screenshot to their computer via chrome.downloads.
+> Only triggered by an explicit user click; never automatic.
+
+**scripting**
+> Used only in background.js to re-inject the already-approved content
+> script into tabs that were already open at the time of an extension
+> update, so the fix is live without the user having to manually refresh
+> every open tab (some workflows, e.g. a support agent's live call
+> session, can't tolerate a page refresh mid-task). Not used for
+> injecting any other code, and not triggered by anything other than the
+> extension's own update event.
+
+**host_permissions — `<all_urls>`**
+> Two features need to work on any page the user visits, so scoping to a
+> smaller set of sites isn't possible: (1) capturing a screenshot of the
+> current tab via chrome.tabs.captureVisibleTab, which specifically
+> requires this exact permission string rather than the equivalent
+> `http://*/*` + `https://*/*` wildcard pair; and (2) detecting a text
+> selection to offer a "Save to sidebar" prompt, via a content script
+> that must be able to run on any page. Neither feature reads, modifies,
+> or transmits page content beyond the specific text the user explicitly
+> selects and clicks to save.
+
+## Data disclosure tab (Privacy practices)
+
+Chrome Web Store asks you to certify what categories of user data the
+extension collects. For every category listed (personally identifiable
+information, health info, financial info, authentication info, personal
+communications, location, web history, user activity, website content),
+the honest answer is **No, this item does not collect that data** — the
+"single purpose" and "privacy policy" sections above back this up, and
+the codebase audit backing this document found zero outbound network
+calls anywhere in the extension.
+
+You'll also be asked to certify:
+- Whether the extension uses remote code — **No** (everything ships in
+  the package; no CDN scripts, no eval, no dynamically fetched code).
+- Whether you comply with the Developer Program Policies — yes, nothing
+  here should be a problem given the above.
+
+## Before you submit — still open
+
+- [ ] Fill in your real contact email in the privacy policy page (currently
+      a placeholder) and re-publish it.
+- [ ] Fill in your name/entity in `LICENSE` (currently a placeholder).
+- [ ] Decide long-term hosting for the privacy policy — the Claude
+      Artifact URL works for now (make sure it's set to Shared, not
+      private, so Google's reviewers can actually load it), but consider
+      moving it somewhere you control (GitHub Pages, a personal domain)
+      if you want it to outlive this conversation.
+- [ ] Store listing screenshots (1280x800 or 640x400) — not yet created.
+- [ ] Icon redesign — current icons are placeholder-quality (see README).
+- [ ] Decide Public vs. Unlisted visibility for the listing.
