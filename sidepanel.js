@@ -11,7 +11,9 @@ const FONT_STACKS = {
 };
 const TEXT_SCALES = { small: 0.92, medium: 1, large: 1.15 };
 
-let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_SETTINGS } };
+const MAX_TRASH = 50;
+
+let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_SETTINGS }, trash: [] };
 let editingSnippets = false;
 let notesSaveTimer = null;
 let dragSrcId = null;
@@ -56,7 +58,9 @@ const el = {
   searchToggleBtn: document.getElementById("searchToggleBtn"),
   searchBar: document.getElementById("searchBar"),
   searchInput: document.getElementById("searchInput"),
-  searchResults: document.getElementById("searchResults")
+  searchResults: document.getElementById("searchResults"),
+  trashList: document.getElementById("trashList"),
+  emptyTrashBtn: document.getElementById("emptyTrashBtn")
 };
 
 let currentLightboxShot = null;
@@ -71,11 +75,12 @@ async function persist(partial) {
 }
 
 async function loadState() {
-  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets", "settings"]);
+  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets", "settings", "trash"]);
   state.tabs = data.tabs || [];
   state.activeTabId = data.activeTabId || (state.tabs[0] && state.tabs[0].id) || null;
   state.snippets = data.snippets || [];
   state.settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings || {});
+  state.trash = data.trash || [];
   renderAll();
   applyTheme(state.settings.theme);
   applyBackground(state.settings.backgroundImage);
@@ -90,6 +95,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.tabs) state.tabs = changes.tabs.newValue || [];
   if (changes.activeTabId) state.activeTabId = changes.activeTabId.newValue;
   if (changes.snippets) state.snippets = changes.snippets.newValue || [];
+  if (changes.trash) state.trash = changes.trash.newValue || [];
   if (changes.settings) {
     state.settings = Object.assign({ ...DEFAULT_SETTINGS }, changes.settings.newValue || {});
     applyTheme(state.settings.theme);
@@ -108,7 +114,137 @@ function renderAll() {
   renderNotes();
   renderScreenshots();
   renderSettingsUI();
+  renderTrash();
 }
+
+/* ---------------- Trash (recently deleted) ---------------- */
+
+async function trashItem(entry) {
+  const trash = [{ id: uid(), deletedAt: Date.now(), ...entry }, ...state.trash].slice(0, MAX_TRASH);
+  await persist({ trash });
+}
+
+function trashTypeLabel(type) {
+  return { tab: "Note tab", highlight: "Highlight", snippet: "Snippet", screenshot: "Screenshot" }[type] || type;
+}
+
+function relativeTime(ms) {
+  const diff = Math.max(0, Date.now() - ms);
+  const min = Math.round(diff / 60000);
+  if (min < 1) return "just now";
+  if (min < 60) return `${min}m ago`;
+  const hr = Math.round(min / 60);
+  if (hr < 24) return `${hr}h ago`;
+  return `${Math.round(hr / 24)}d ago`;
+}
+
+function renderTrash() {
+  el.trashList.innerHTML = "";
+  el.emptyTrashBtn.classList.toggle("hidden", state.trash.length === 0);
+
+  if (state.trash.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state trash-empty";
+    empty.textContent = "Nothing deleted recently.";
+    el.trashList.appendChild(empty);
+    return;
+  }
+
+  state.trash.forEach(entry => {
+    const row = document.createElement("div");
+    row.className = "trash-row";
+
+    const tag = document.createElement("span");
+    tag.className = "trash-tag";
+    tag.textContent = trashTypeLabel(entry.type);
+
+    const text = document.createElement("div");
+    text.className = "trash-text";
+    const title = document.createElement("div");
+    title.className = "trash-title";
+    title.textContent = trashEntryTitle(entry);
+    const time = document.createElement("div");
+    time.className = "trash-time";
+    time.textContent = relativeTime(entry.deletedAt);
+    text.appendChild(title);
+    text.appendChild(time);
+
+    const restoreBtn = document.createElement("button");
+    restoreBtn.className = "small-btn";
+    restoreBtn.textContent = "Restore";
+    restoreBtn.addEventListener("click", () => restoreTrashEntry(entry.id));
+
+    row.appendChild(tag);
+    row.appendChild(text);
+    row.appendChild(restoreBtn);
+    el.trashList.appendChild(row);
+  });
+}
+
+function trashEntryTitle(entry) {
+  if (entry.type === "tab") return entry.tab.name;
+  if (entry.type === "highlight") return entry.highlight.text.slice(0, 60);
+  if (entry.type === "snippet") return entry.snippet.label;
+  if (entry.type === "screenshot") return `From "${entry.tabName}"`;
+  return "";
+}
+
+// Restores a highlight/screenshot into its original note tab, recreating
+// that tab (by name) first if it was also deleted since.
+function resolveOwningTab(tabs, entry) {
+  let target = tabs.find(t => t.id === entry.tabId);
+  if (target) return { tabs, tab: target };
+  const fresh = { id: entry.tabId, name: entry.tabName || "Restored note", notes: "", highlights: [], screenshots: [] };
+  return { tabs: [...tabs, fresh], tab: fresh };
+}
+
+async function restoreTrashEntry(entryId) {
+  const entry = state.trash.find(e => e.id === entryId);
+  if (!entry) return;
+  const remainingTrash = state.trash.filter(e => e.id !== entryId);
+
+  if (entry.type === "tab") {
+    const tabs = [...state.tabs];
+    const idx = Math.min(Math.max(entry.index ?? tabs.length, 0), tabs.length);
+    tabs.splice(idx, 0, entry.tab);
+    await persist({ tabs, activeTabId: entry.tab.id, trash: remainingTrash });
+  } else if (entry.type === "snippet") {
+    const snippets = [...state.snippets];
+    const idx = Math.min(Math.max(entry.index ?? snippets.length, 0), snippets.length);
+    snippets.splice(idx, 0, entry.snippet);
+    await persist({ snippets, trash: remainingTrash });
+  } else if (entry.type === "highlight") {
+    const { tabs, tab } = resolveOwningTab(state.tabs, entry);
+    const updatedTabs = tabs.map(t => {
+      if (t.id !== tab.id) return t;
+      const highlights = [...(t.highlights || [])];
+      const idx = Math.min(Math.max(entry.index ?? 0, 0), highlights.length);
+      highlights.splice(idx, 0, entry.highlight);
+      return { ...t, highlights };
+    });
+    await persist({ tabs: updatedTabs, activeTabId: tab.id, trash: remainingTrash });
+  } else if (entry.type === "screenshot") {
+    const { tabs, tab } = resolveOwningTab(state.tabs, entry);
+    const updatedTabs = tabs.map(t => {
+      if (t.id !== tab.id) return t;
+      const screenshots = [...(t.screenshots || [])];
+      const idx = Math.min(Math.max(entry.index ?? 0, 0), screenshots.length);
+      screenshots.splice(idx, 0, entry.screenshot);
+      return { ...t, screenshots };
+    });
+    await persist({ tabs: updatedTabs, activeTabId: tab.id, trash: remainingTrash });
+  }
+
+  renderAll();
+}
+
+el.emptyTrashBtn.addEventListener("click", async () => {
+  if (!state.trash.length) return;
+  const ok = confirm(`Permanently remove all ${state.trash.length} item${state.trash.length === 1 ? "" : "s"} from Recently Deleted? This can't be undone.`);
+  if (!ok) return;
+  await persist({ trash: [] });
+  renderTrash();
+});
 
 /* ---------------- Settings: theme + background image ---------------- */
 
@@ -257,7 +393,8 @@ el.exportDataBtn.addEventListener("click", () => {
     tabs: state.tabs,
     activeTabId: state.activeTabId,
     snippets: state.snippets,
-    settings: state.settings
+    settings: state.settings,
+    trash: state.trash
   };
   const blob = new Blob([JSON.stringify(backup, null, 2)], { type: "application/json" });
   const url = URL.createObjectURL(blob);
@@ -311,8 +448,9 @@ el.importDataInput.addEventListener("change", async () => {
     const activeTabId = tabs.some(t => t.id === data.activeTabId) ? data.activeTabId : (tabs[0] && tabs[0].id) || null;
     const snippets = Array.isArray(data.snippets) ? data.snippets : [];
     const settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings && typeof data.settings === "object" ? data.settings : {});
+    const trash = Array.isArray(data.trash) ? data.trash : [];
 
-    await persist({ tabs, activeTabId, snippets, settings });
+    await persist({ tabs, activeTabId, snippets, settings, trash });
     applyTheme(settings.theme);
     applyBackground(settings.backgroundImage);
     applyFont(settings.font);
@@ -426,6 +564,9 @@ function startRename(row, tab, labelEl) {
 }
 
 async function closeTab(tabId) {
+  const closedIndex = state.tabs.findIndex(t => t.id === tabId);
+  const closedTab = state.tabs[closedIndex];
+
   let remaining = state.tabs.filter(t => t.id !== tabId);
   let newActive = state.activeTabId;
   if (remaining.length === 0) {
@@ -436,6 +577,7 @@ async function closeTab(tabId) {
     newActive = remaining[remaining.length - 1].id;
   }
   await persist({ tabs: remaining, activeTabId: newActive });
+  if (closedTab) await trashItem({ type: "tab", tab: closedTab, index: closedIndex });
   renderAll();
 }
 
@@ -540,9 +682,12 @@ function renderSnippets() {
       del.title = "Delete snippet";
       del.innerHTML = trashIcon();
       del.addEventListener("click", async () => {
+        const sIndex = state.snippets.findIndex(s => s.id === snippet.id);
         const updated = state.snippets.filter(s => s.id !== snippet.id);
         await persist({ snippets: updated });
+        await trashItem({ type: "snippet", snippet, index: sIndex });
         renderSnippets();
+        renderTrash();
       });
 
       row.appendChild(labelInput);
@@ -664,11 +809,14 @@ function renderHighlights() {
     del.title = "Remove";
     del.innerHTML = trashIcon();
     del.addEventListener("click", async () => {
+      const hIndex = tab.highlights.findIndex(x => x.id === h.id);
       const updatedTabs = state.tabs.map(t =>
         t.id === tab.id ? { ...t, highlights: t.highlights.filter(x => x.id !== h.id) } : t
       );
       await persist({ tabs: updatedTabs });
+      await trashItem({ type: "highlight", highlight: h, tabId: tab.id, tabName: tab.name, index: hIndex });
       renderHighlights();
+      renderTrash();
     });
 
     actions.appendChild(copyBtn);
@@ -687,9 +835,16 @@ el.clearHighlightsBtn.addEventListener("click", async () => {
   const count = tab.highlights.length;
   const ok = confirm(`Delete all ${count} saved highlight${count === 1 ? "" : "s"} for "${tab.name}"? This can't be undone.`);
   if (!ok) return;
+  const removed = [...tab.highlights];
   const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, highlights: [] } : t));
   await persist({ tabs: updatedTabs });
+  // Trashed in original order so restoring one-by-one later re-inserts at
+  // sensible indices relative to each other.
+  for (let i = 0; i < removed.length; i++) {
+    await trashItem({ type: "highlight", highlight: removed[i], tabId: tab.id, tabName: tab.name, index: i });
+  }
   renderHighlights();
+  renderTrash();
 });
 
 /* ---------------- Notes ---------------- */
@@ -818,11 +973,14 @@ el.lightboxDeleteBtn.addEventListener("click", async () => {
   const tab = activeTab();
   if (!tab) return;
   const shotId = currentLightboxShot.id;
+  const shotIndex = (tab.screenshots || []).findIndex(s => s.id === shotId);
   const updatedTabs = state.tabs.map(t =>
     t.id === tab.id ? { ...t, screenshots: (t.screenshots || []).filter(s => s.id !== shotId) } : t
   );
   await persist({ tabs: updatedTabs });
+  await trashItem({ type: "screenshot", screenshot: currentLightboxShot, tabId: tab.id, tabName: tab.name, index: shotIndex });
   renderScreenshots();
+  renderTrash();
   closeLightbox();
 });
 

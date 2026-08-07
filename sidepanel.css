@@ -546,6 +546,7 @@ a.highlight-source:hover {
   align-items: flex-start;
   justify-content: center;
   padding: 40px 14px;
+  overflow-y: auto;
 }
 .settings-card {
   width: 100%;
@@ -610,6 +611,50 @@ a.highlight-source:hover {
 .font-btn.active .font-name { color: var(--text); }
 
 .backup-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.trash-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 160px;
+  overflow-y: auto;
+  margin-bottom: 8px;
+}
+.trash-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.trash-tag {
+  flex: none;
+  font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+  font-size: calc(9.5px * var(--text-scale));
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-faint);
+  background: var(--surface);
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  padding: 2px 5px;
+  white-space: nowrap;
+}
+.trash-text { flex: 1; min-width: 0; }
+.trash-title {
+  font-size: calc(12px * var(--text-scale));
+  color: var(--text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.trash-time {
+  font-size: calc(10px * var(--text-scale));
+  color: var(--text-faint);
+}
+.trash-empty { padding: 6px 2px; margin-bottom: 4px; }
 
 .bg-preview-row { display: flex; align-items: center; gap: 10px; }
 .bg-preview {

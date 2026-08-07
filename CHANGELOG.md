@@ -2,6 +2,21 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.6.0 — 2026-08-07
+
+- Recently Deleted (Settings > Recently deleted): closing a note tab,
+  deleting a highlight (single or "Delete All"), deleting a snippet, or
+  deleting a screenshot now lands in a unified, restorable trash list
+  instead of disappearing immediately. Each entry shows a type tag, an
+  excerpt, and a relative time; Restore puts it back (in its original
+  position where that's meaningful), recreating the parent note tab by
+  name first if that was deleted too. Capped at the last 50 deletions,
+  oldest dropped silently past that — no time-based expiry. "Empty trash"
+  clears it permanently. Trash is carried through Export/Import backups.
+- Fixed: the Settings modal had no scroll handling, so on a full panel it
+  could overflow past the visible area with no way to reach the rest —
+  now scrolls properly.
+
 ## 1.5.0 — 2026-08-07
 
 - Global search (magnifying-glass icon in the header): searches note tab
