@@ -95,7 +95,7 @@
         <h2>Saved from pages</h2>
         <span class="info-wrap">
           <button class="info-btn" type="button" aria-label="About Saved from pages">i</button>
-          <div class="info-tooltip">Highlight text on any page, then click "Save to sidebar" to collect it here with a link back to the exact spot — quotes for research, evidence for a bug, policy language for support.</div>
+          <div class="info-tooltip">Highlight text on any page, then click "Save to sidebar" to collect it here with a link back to the source page — quotes for research, evidence for a bug, policy language for support.</div>
         </span>
         <span id="highlightsCounter" class="counter-text"></span>
       </div>
@@ -114,9 +114,16 @@
           <path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path>
         </svg>
       </button>
+      <button class="icon-btn" id="toggleCollapseHighlights" title="Collapse Saved from pages">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="6 9 12 15 18 9"></polyline>
+        </svg>
+      </button>
       </div>
     </div>
-    <div id="highlightsList" class="highlights-list"></div>
+    <div id="highlightsBody" class="highlights-body">
+      <div id="highlightsList" class="highlights-list"></div>
+    </div>
   </section>
 
   <section class="panel notes-panel">

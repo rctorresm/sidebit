@@ -418,8 +418,10 @@ body.has-bg-image .bg-backdrop::after {
 .snippets-body.hidden { display: none; }
 .snippets-list { overflow-y: auto; display: flex; flex-direction: column; gap: 4px; }
 
-#toggleCollapseSnippets svg { transition: transform 150ms ease; }
-#toggleCollapseSnippets.collapsed svg { transform: rotate(-90deg); }
+#toggleCollapseSnippets svg,
+#toggleCollapseHighlights svg { transition: transform 150ms ease; }
+#toggleCollapseSnippets.collapsed svg,
+#toggleCollapseHighlights.collapsed svg { transform: rotate(-90deg); }
 
 .snippet-row {
   display: flex;
@@ -547,6 +549,8 @@ body.has-bg-image .bg-backdrop::after {
 
 /* Highlights */
 .highlights-panel { max-height: 240px; display: flex; flex-direction: column; }
+.highlights-body { display: flex; flex-direction: column; min-height: 0; overflow: hidden; }
+.highlights-body.hidden { display: none; }
 .highlights-list { overflow-y: auto; display: flex; flex-direction: column; gap: 6px; }
 .highlight-row {
   padding: 8px;
@@ -574,13 +578,21 @@ body.has-bg-image .bg-backdrop::after {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  text-decoration: none;
 }
-a.highlight-source:hover {
-  color: var(--accent);
-  text-decoration: underline;
+.highlight-actions { display: flex; gap: 4px; flex: none; align-items: center; }
+.highlight-link-btn {
+  flex: none;
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: var(--text-faint);
+  padding: 4px;
+  border-radius: 6px;
+  cursor: pointer;
 }
-.highlight-actions { display: flex; gap: 4px; flex: none; }
+.highlight-link-btn svg { width: 13px; height: 13px; }
+.highlight-link-btn:hover { color: var(--accent); background: var(--surface); }
 
 .empty-state {
   color: var(--text-faint);

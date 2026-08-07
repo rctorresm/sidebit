@@ -5,7 +5,7 @@ function countWords(text) {
   return trimmed ? trimmed.split(/\s+/).length : 0;
 }
 
-const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false };
+const DEFAULT_SETTINGS = { theme: "dark", backgroundImage: null, font: "system", textSize: "medium", quickCopyCollapsed: false, savedPagesCollapsed: false };
 
 // Three self-contained, universally pre-installed fonts chosen for on-screen
 // readability — no bundled font files, no CSP/network concerns.
@@ -40,6 +40,8 @@ const el = {
   newSnippetLabel: document.getElementById("newSnippetLabel"),
   newSnippetValue: document.getElementById("newSnippetValue"),
   addSnippetBtn: document.getElementById("addSnippetBtn"),
+  highlightsBody: document.getElementById("highlightsBody"),
+  toggleCollapseHighlights: document.getElementById("toggleCollapseHighlights"),
   highlightsList: document.getElementById("highlightsList"),
   highlightsCounter: document.getElementById("highlightsCounter"),
   clearHighlightsBtn: document.getElementById("clearHighlightsBtn"),
@@ -915,6 +917,12 @@ el.toggleCollapseSnippets.addEventListener("click", async () => {
   renderSnippets();
 });
 
+el.toggleCollapseHighlights.addEventListener("click", async () => {
+  const savedPagesCollapsed = !state.settings.savedPagesCollapsed;
+  await persist({ settings: { ...state.settings, savedPagesCollapsed } });
+  renderHighlights();
+});
+
 el.addSnippetBtn.addEventListener("click", async () => {
   const label = el.newSnippetLabel.value.trim();
   const value = el.newSnippetValue.value.trim();
@@ -939,6 +947,11 @@ el.addSnippetBtn.addEventListener("click", async () => {
 
 function renderHighlights() {
   wireUndoButton(el.undoHighlightBtn, "highlight", e => e.tabId === state.activeTabId);
+
+  const collapsed = !!state.settings.savedPagesCollapsed;
+  el.highlightsBody.classList.toggle("hidden", collapsed);
+  el.toggleCollapseHighlights.classList.toggle("collapsed", collapsed);
+  el.toggleCollapseHighlights.title = collapsed ? "Expand Saved from pages" : "Collapse Saved from pages";
 
   el.highlightsList.innerHTML = "";
   const tab = activeTab();
@@ -970,18 +983,24 @@ function renderHighlights() {
     const meta = document.createElement("div");
     meta.className = "highlight-meta";
 
-    const source = document.createElement(h.url ? "a" : "span");
+    const source = document.createElement("span");
     source.className = "highlight-source";
     source.textContent = h.source || "";
     source.title = h.title || "";
-    if (h.url) {
-      source.href = h.url;
-      source.target = "_blank";
-      source.rel = "noopener noreferrer";
-    }
 
     const actions = document.createElement("div");
     actions.className = "highlight-actions";
+
+    if (h.url) {
+      const linkBtn = document.createElement("button");
+      linkBtn.className = "highlight-link-btn";
+      linkBtn.title = `Open source: ${h.source || h.url}`;
+      linkBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>`;
+      linkBtn.addEventListener("click", () => {
+        window.open(h.url, "_blank", "noopener,noreferrer");
+      });
+      actions.appendChild(linkBtn);
+    }
 
     const copyBtn = document.createElement("button");
     copyBtn.className = "copy-btn";
@@ -1297,6 +1316,10 @@ async function selectHighlightResult(tabId, highlightId) {
   if (tabId !== state.activeTabId) {
     await persist({ activeTabId: tabId });
     renderAll();
+  }
+  if (state.settings.savedPagesCollapsed) {
+    await persist({ settings: { ...state.settings, savedPagesCollapsed: false } });
+    renderHighlights();
   }
   closeSearch();
   requestAnimationFrame(() => {

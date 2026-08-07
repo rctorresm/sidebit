@@ -2,6 +2,16 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.12.0 — 2026-08-07
+
+- Saved from pages is now collapsible, same pattern as Quick copy
+  (chevron next to the trash icon, remembers your preference).
+- Simplified saved highlights: capture the plain page URL instead of a
+  deep "scroll to this exact text" link — one less thing that can go
+  wrong, and the source is shown as a small link icon next to Copy
+  instead of a clickable hostname, for a more compact row. Existing
+  saved highlights with the old deep-link format still work fine.
+
 ## 1.11.2 — 2026-08-07
 
 - Fixed another highlight-to-save gap: `all_frames` alone doesn't reach

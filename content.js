@@ -46,15 +46,10 @@
     return { text, rect };
   }
 
-  // Builds a URL that scrolls straight to the highlighted text when opened,
-  // using the same text-fragment mechanism as Chrome's built-in "Copy link
-  // to highlight". Capped at 300 chars — long fragments just fail to match
-  // and the link still opens the page fine, no error either way.
-  function buildHighlightLink(text) {
-    const clean = text.replace(/\s+/g, " ").trim().slice(0, 300);
-    const base = location.href.split("#")[0];
-    if (!clean) return base;
-    return `${base}#:~:text=${encodeURIComponent(clean)}`;
+  // Plain page URL (no text-fragment deep link) — just the general
+  // source address, with any existing hash stripped.
+  function pageLink() {
+    return location.href.split("#")[0];
   }
 
   function removePill() {
@@ -129,7 +124,7 @@
           text,
           source: location.hostname,
           title: document.title,
-          url: buildHighlightLink(text)
+          url: pageLink()
         },
         () => {
           pill.classList.add("saved");
