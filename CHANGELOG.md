@@ -2,6 +2,12 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.2.1 — 2026-08-07
+
+- "Saved from pages" panel: added a Delete All action (with confirmation)
+  next to the section heading, for clearing out an active note's saved
+  highlights in one step. Only appears when there's something to clear.
+
 ## 1.2.0 — 2026-08-07
 
 - Settings: Text size (Small/Medium/Large) and Font (System, Georgia,

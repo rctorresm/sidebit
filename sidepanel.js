@@ -27,6 +27,7 @@ const el = {
   newSnippetValue: document.getElementById("newSnippetValue"),
   addSnippetBtn: document.getElementById("addSnippetBtn"),
   highlightsList: document.getElementById("highlightsList"),
+  clearHighlightsBtn: document.getElementById("clearHighlightsBtn"),
   notesArea: document.getElementById("notesArea"),
   saveIndicator: document.getElementById("saveIndicator"),
   settingsBtn: document.getElementById("settingsBtn"),
@@ -515,6 +516,8 @@ function renderHighlights() {
   const tab = activeTab();
   const highlights = tab ? tab.highlights || [] : [];
 
+  el.clearHighlightsBtn.classList.toggle("hidden", highlights.length === 0);
+
   if (highlights.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
@@ -576,6 +579,17 @@ function renderHighlights() {
     el.highlightsList.appendChild(row);
   });
 }
+
+el.clearHighlightsBtn.addEventListener("click", async () => {
+  const tab = activeTab();
+  if (!tab || !(tab.highlights || []).length) return;
+  const count = tab.highlights.length;
+  const ok = confirm(`Delete all ${count} saved highlight${count === 1 ? "" : "s"} for "${tab.name}"? This can't be undone.`);
+  if (!ok) return;
+  const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, highlights: [] } : t));
+  await persist({ tabs: updatedTabs });
+  renderHighlights();
+});
 
 /* ---------------- Notes ---------------- */
 
