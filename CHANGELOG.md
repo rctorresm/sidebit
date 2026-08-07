@@ -2,6 +2,12 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.15.2 — 2026-08-07
+
+- Fixed the Capture hint's wording: it now reads "Paste ↑ or →", spelling
+  out both ways to get a screenshot in — paste from your OS tool above
+  (into Notes) or click Capture — instead of a single arrow.
+
 ## 1.15.1 — 2026-08-07
 
 - Added a small "Paste →" hint next to the Screenshots Capture button, so
