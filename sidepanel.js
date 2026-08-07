@@ -39,6 +39,7 @@ const el = {
   addSnippetRow: document.getElementById("addSnippetRow"),
   newSnippetLabel: document.getElementById("newSnippetLabel"),
   newSnippetValue: document.getElementById("newSnippetValue"),
+  newSnippetTabOnly: document.getElementById("newSnippetTabOnly"),
   addSnippetBtn: document.getElementById("addSnippetBtn"),
   highlightsList: document.getElementById("highlightsList"),
   highlightsCounter: document.getElementById("highlightsCounter"),
@@ -277,7 +278,7 @@ el.undoTabBtn.addEventListener("click", async () => {
   if (entry) await restoreTrashEntry(entry.id);
 });
 el.undoSnippetBtn.addEventListener("click", async () => {
-  const entry = findLastTrash("snippet");
+  const entry = findLastTrash("snippet", e => isSnippetVisible(e.snippet));
   if (entry) await restoreTrashEntry(entry.id);
 });
 el.undoHighlightBtn.addEventListener("click", async () => {
@@ -715,8 +716,16 @@ function flashCopied(btn) {
   }, 1100);
 }
 
+// Snippets with no scope field (pre-dating this feature) count as global.
+function isSnippetGlobal(s) {
+  return s.scope !== "tab";
+}
+function isSnippetVisible(s) {
+  return isSnippetGlobal(s) || s.tabId === state.activeTabId;
+}
+
 function renderSnippets() {
-  wireUndoButton(el.undoSnippetBtn, "snippet");
+  wireUndoButton(el.undoSnippetBtn, "snippet", e => isSnippetVisible(e.snippet));
 
   const collapsed = !!state.settings.quickCopyCollapsed;
   el.snippetsBody.classList.toggle("hidden", collapsed);
@@ -725,16 +734,22 @@ function renderSnippets() {
 
   el.snippetsList.innerHTML = "";
 
-  if (state.snippets.length === 0 && !editingSnippets) {
+  // All-tabs entries always render above this-tab-only ones; entries
+  // belonging to a different tab don't show at all.
+  const visible = state.snippets.filter(isSnippetVisible);
+  const ordered = [...visible.filter(isSnippetGlobal), ...visible.filter(s => !isSnippetGlobal(s))];
+
+  if (ordered.length === 0 && !editingSnippets) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
     empty.textContent = "No quick-copy snippets yet. Click the pencil to add one.";
     el.snippetsList.appendChild(empty);
   }
 
-  state.snippets.forEach(snippet => {
+  ordered.forEach(snippet => {
     const row = document.createElement("div");
     row.className = "snippet-row" + (editingSnippets ? " edit-mode" : "");
+    if (!editingSnippets && isSnippetGlobal(snippet)) row.classList.add("scope-all");
     row.dataset.snippetId = snippet.id;
 
     if (editingSnippets) {
@@ -756,6 +771,8 @@ function renderSnippets() {
       });
       row.addEventListener("dragover", e => {
         if (!dragSrcId || dragSrcId === snippet.id) return;
+        const draggedSnippet = state.snippets.find(s => s.id === dragSrcId);
+        if (!draggedSnippet || isSnippetGlobal(draggedSnippet) !== isSnippetGlobal(snippet)) return;
         e.preventDefault();
         row.classList.add("drag-over");
       });
@@ -764,17 +781,42 @@ function renderSnippets() {
         e.preventDefault();
         row.classList.remove("drag-over");
         if (!dragSrcId || dragSrcId === snippet.id) return;
-        const from = state.snippets.findIndex(s => s.id === dragSrcId);
-        const to = state.snippets.findIndex(s => s.id === snippet.id);
+        const draggedSnippet = state.snippets.find(s => s.id === dragSrcId);
+        if (!draggedSnippet || isSnippetGlobal(draggedSnippet) !== isSnippetGlobal(snippet)) return;
+
+        const isGlobalGroup = isSnippetGlobal(snippet);
+        const group = state.snippets.filter(s => isSnippetGlobal(s) === isGlobalGroup);
+        const rest = state.snippets.filter(s => isSnippetGlobal(s) !== isGlobalGroup);
+        const from = group.findIndex(s => s.id === dragSrcId);
+        const to = group.findIndex(s => s.id === snippet.id);
         if (from === -1 || to === -1) return;
-        const reordered = [...state.snippets];
-        const [moved] = reordered.splice(from, 1);
-        reordered.splice(to, 0, moved);
+        const reorderedGroup = [...group];
+        const [moved] = reorderedGroup.splice(from, 1);
+        reorderedGroup.splice(to, 0, moved);
+
+        const reordered = isGlobalGroup ? [...reorderedGroup, ...rest] : [...rest, ...reorderedGroup];
         await persist({ snippets: reordered });
         renderSnippets();
       });
 
       row.appendChild(handle);
+
+      const scopeToggle = document.createElement("button");
+      scopeToggle.className = "scope-toggle-btn" + (isSnippetGlobal(snippet) ? " scope-all" : "");
+      scopeToggle.title = isSnippetGlobal(snippet)
+        ? "All tabs — click to make this tab only"
+        : "This tab only — click to make it All tabs";
+      scopeToggle.addEventListener("click", async () => {
+        const updated = state.snippets.map(s => {
+          if (s.id !== snippet.id) return s;
+          return isSnippetGlobal(s)
+            ? { ...s, scope: "tab", tabId: state.activeTabId }
+            : { ...s, scope: "all", tabId: null };
+        });
+        await persist({ snippets: updated });
+        renderSnippets();
+      });
+      row.appendChild(scopeToggle);
 
       const labelInput = document.createElement("input");
       labelInput.className = "snippet-label-input";
@@ -878,10 +920,15 @@ el.addSnippetBtn.addEventListener("click", async () => {
   const label = el.newSnippetLabel.value.trim();
   const value = el.newSnippetValue.value.trim();
   if (!label || !value) return;
-  const snippets = [...state.snippets, { id: uid(), label, value }];
+  const tabOnly = el.newSnippetTabOnly.checked;
+  const fresh = tabOnly
+    ? { id: uid(), label, value, scope: "tab", tabId: state.activeTabId }
+    : { id: uid(), label, value, scope: "all", tabId: null };
+  const snippets = [...state.snippets, fresh];
   await persist({ snippets });
   el.newSnippetLabel.value = "";
   el.newSnippetValue.value = "";
+  el.newSnippetTabOnly.checked = false;
   el.newSnippetLabel.focus();
   renderSnippets();
 });
@@ -1233,7 +1280,12 @@ async function selectTabResult(tabId, query) {
   });
 }
 
-function selectSnippetResult(snippetId) {
+async function selectSnippetResult(snippetId) {
+  const snippet = state.snippets.find(s => s.id === snippetId);
+  if (snippet && !isSnippetGlobal(snippet) && snippet.tabId !== state.activeTabId && state.tabs.some(t => t.id === snippet.tabId)) {
+    await persist({ activeTabId: snippet.tabId });
+    renderAll();
+  }
   closeSearch();
   requestAnimationFrame(() => {
     const row = el.snippetsList.querySelector(`[data-snippet-id="${snippetId}"]`);
@@ -1318,7 +1370,10 @@ function renderSearchResults(rawQuery) {
     title.appendChild(highlightMatch(snippet.label, q));
     const sub = document.createElement("div");
     sub.className = "search-result-sub";
-    sub.textContent = snippet.value;
+    const scopeHint = !isSnippetGlobal(snippet)
+      ? `${(state.tabs.find(t => t.id === snippet.tabId) || {}).name || "a tab"} only · `
+      : "";
+    sub.textContent = scopeHint + snippet.value;
     row.appendChild(title);
     row.appendChild(sub);
     row.addEventListener("click", () => selectSnippetResult(snippet.id));

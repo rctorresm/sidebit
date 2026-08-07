@@ -17,6 +17,7 @@
   --overlay: rgba(0, 0, 0, 0.5);
   --app-font: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
   --text-scale: 1;
+  --scope-all: #e0973f;
 }
 
 :root[data-theme="light"] {
@@ -34,6 +35,7 @@
   --success-bg: #e6f9f1;
   --danger: #d0403f;
   --overlay: rgba(255, 255, 255, 0.6);
+  --scope-all: #b06a1e;
 }
 
 * { box-sizing: border-box; }
@@ -376,6 +378,27 @@ body.has-bg-image .bg-backdrop::after {
   opacity: 1;
 }
 
+/* Quick copy scope legend */
+.scope-legend {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: calc(9.5px * var(--text-scale));
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text-faint);
+  flex: none;
+  margin-left: 2px;
+}
+.scope-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--scope-all);
+  flex: none;
+}
+
 .icon-btn {
   background: none;
   border: none;
@@ -407,6 +430,7 @@ body.has-bg-image .bg-backdrop::after {
   background: var(--surface-2);
   border: 1px solid transparent;
 }
+.snippet-row.scope-all { border-color: var(--scope-all); }
 .snippet-row .snippet-text { flex: 1; min-width: 0; }
 .snippet-row .snippet-label { font-weight: 600; font-size: calc(12px * var(--text-scale)); color: var(--text); }
 .snippet-row .snippet-value {
@@ -467,6 +491,19 @@ body.has-bg-image .bg-backdrop::after {
 .snippet-row.edit-mode.drag-over {
   border-top: 2px solid var(--accent);
 }
+
+.scope-toggle-btn {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  margin-top: 2px;
+  border-radius: 50%;
+  border: 1px solid var(--border-strong);
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+.scope-toggle-btn.scope-all { background: var(--scope-all); border-color: var(--scope-all); }
 .delete-btn {
   flex: none;
   background: none;
@@ -481,11 +518,13 @@ body.has-bg-image .bg-backdrop::after {
 
 .add-snippet-row {
   display: flex;
+  flex-direction: column;
   gap: 6px;
   margin-top: 8px;
 }
 .add-snippet-row.hidden { display: none; }
-.add-snippet-row input {
+.add-snippet-fields { display: flex; gap: 6px; }
+.add-snippet-fields input {
   flex: 1;
   min-width: 0;
   background: var(--surface-2);
@@ -495,6 +534,21 @@ body.has-bg-image .bg-backdrop::after {
   padding: 6px 8px;
   font: inherit;
 }
+.add-snippet-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.scope-check {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: calc(11px * var(--text-scale));
+  color: var(--text-dim);
+  cursor: pointer;
+}
+.scope-check input { margin: 0; accent-color: var(--scope-all); }
 .small-btn {
   flex: none;
   background: var(--accent);

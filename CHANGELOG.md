@@ -2,6 +2,23 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.11.0 — 2026-08-07
+
+- Quick copy split: snippets can now be "All tabs" (today's behavior —
+  visible everywhere, orange ring, legend dot next to the info tooltip)
+  or "This tab only" (visible only on the tab that created them, normal
+  look). All-tabs entries always sort above this-tab-only ones; each
+  group reorders independently via drag (can't mix groups).
+  - New snippets: a "This tab only" checkbox in the Add row.
+  - Existing snippets: a small toggle dot in edit mode flips scope —
+    filled orange for All tabs, hollow for this-tab-only.
+  - Search, Undo, and Recently Deleted are all scope-aware — search
+    shows a "<tab name> only" hint and switches tabs when you click a
+    tab-specific result; Undo only offers deletions relevant to what's
+    currently visible.
+  - Snippets created before this update default to "All tabs" — nothing
+    changes for existing data.
+
 ## 1.10.0 — 2026-08-07
 
 - Pin & reorder note tabs: hover a tab to reveal a pin icon (always

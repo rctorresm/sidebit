@@ -57,6 +57,7 @@
           <button class="info-btn" type="button" aria-label="About Quick copy">i</button>
           <div class="info-tooltip">Save text you paste often — phone numbers, email templates, canned replies, disclaimers. One click to copy, no retyping.</div>
         </span>
+        <span class="scope-legend"><span class="scope-dot"></span>All tabs</span>
       </div>
       <div class="panel-head-actions">
         <button class="icon-btn hidden" id="undoSnippetBtn" title="Undo">
@@ -81,9 +82,17 @@
     <div id="snippetsBody" class="snippets-body">
       <div id="snippetsList" class="snippets-list"></div>
       <div id="addSnippetRow" class="add-snippet-row hidden">
-        <input type="text" id="newSnippetLabel" placeholder="Label (e.g. Support line)" />
-        <input type="text" id="newSnippetValue" placeholder="Value to copy" />
-        <button id="addSnippetBtn" class="small-btn">Add</button>
+        <div class="add-snippet-fields">
+          <input type="text" id="newSnippetLabel" placeholder="Label (e.g. Support line)" />
+          <input type="text" id="newSnippetValue" placeholder="Value to copy" />
+        </div>
+        <div class="add-snippet-actions">
+          <label class="scope-check">
+            <input type="checkbox" id="newSnippetTabOnly" />
+            <span>This tab only</span>
+          </label>
+          <button id="addSnippetBtn" class="small-btn">Add</button>
+        </div>
       </div>
     </div>
   </section>
