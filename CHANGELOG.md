@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.19.1 — 2026-08-07
+
+- Redesigned the extension icon (16/48/128px) — a dark navy badge with a
+  simple two-block glyph: a wide "page" block and a narrower "docked
+  panel" block in accent blue, literally depicting what the extension
+  does. Replaces the placeholder-quality programmatically-generated
+  icons. Checked for legibility at all three shipped sizes, including
+  against both light and dark toolbar backgrounds at true 16px.
+
 ## 1.19.0 — 2026-08-07
 
 - Screenshots gallery: new Select mode (icon button next to Capture, shown

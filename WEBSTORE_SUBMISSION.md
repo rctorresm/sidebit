@@ -117,5 +117,5 @@ You'll also be asked to certify:
       moving it somewhere you control (GitHub Pages, a personal domain)
       if you want it to outlive this conversation.
 - [ ] Store listing screenshots (1280x800 or 640x400) — not yet created.
-- [ ] Icon redesign — current icons are placeholder-quality (see README).
+- [x] Icon redesign — done (dark badge, two-block "docked panel" mark).
 - [ ] Decide Public vs. Unlisted visibility for the listing.

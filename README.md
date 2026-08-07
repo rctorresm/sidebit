@@ -97,8 +97,6 @@ the extension makes zero network requests.
 - **No automated tests.** It's small enough that this was done manually so
   far; a `tests/` folder with basic DOM/unit tests around the storage-sync
   logic in `sidepanel.js` would be the highest-value addition.
-- **Icons are placeholder-quality**, generated programmatically — worth a
-  real design pass before a public Chrome Web Store listing.
 
 ## Version history
 
