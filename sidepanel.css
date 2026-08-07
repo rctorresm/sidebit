@@ -372,6 +372,71 @@ a.highlight-source:hover {
 #notesArea:focus { border-color: var(--accent-dim); }
 #notesArea::placeholder { color: var(--text-faint); }
 
+/* Screenshots */
+.screenshots-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 12px 0 8px;
+  flex: none;
+}
+.screenshots-head .settings-label { margin-bottom: 0; }
+.capture-btn { display: inline-flex; align-items: center; gap: 6px; }
+
+.screenshots-strip {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  max-height: 140px;
+  overflow-y: auto;
+  flex: none;
+}
+.screenshot-thumb {
+  width: 60px;
+  height: 60px;
+  flex: none;
+  border-radius: 6px;
+  border: 1px solid var(--border-strong);
+  background-color: var(--surface-2);
+  background-size: cover;
+  background-position: center;
+  cursor: pointer;
+  padding: 0;
+}
+.screenshot-thumb:hover { border-color: var(--accent-dim); }
+.screenshots-empty { padding: 6px 2px; }
+
+/* Lightbox */
+.lightbox-card {
+  width: 100%;
+  max-width: 480px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  padding: 14px;
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+}
+.lightbox-card .panel-head { margin-bottom: 10px; }
+.lightbox-card .panel-head h2 {
+  font-size: calc(13px * var(--text-scale));
+  text-transform: none;
+  letter-spacing: normal;
+  color: var(--text);
+  font-weight: 700;
+}
+.lightbox-img {
+  display: block;
+  width: 100%;
+  max-height: 55vh;
+  object-fit: contain;
+  border-radius: var(--radius);
+  background: var(--surface-2);
+  margin: 0 0 12px;
+}
+.lightbox-actions { display: flex; gap: 8px; justify-content: center; }
+.danger-btn { color: var(--danger); border-color: var(--danger); }
+.danger-btn:hover { background: var(--danger); color: #fff; }
+
 /* Settings modal */
 .hidden { display: none !important; }
 

@@ -43,8 +43,19 @@ const el = {
   bgStatus: document.getElementById("bgStatus"),
   exportDataBtn: document.getElementById("exportDataBtn"),
   importDataInput: document.getElementById("importDataInput"),
-  backupStatus: document.getElementById("backupStatus")
+  backupStatus: document.getElementById("backupStatus"),
+  captureBtn: document.getElementById("captureBtn"),
+  screenshotsStrip: document.getElementById("screenshotsStrip"),
+  screenshotModal: document.getElementById("screenshotModal"),
+  closeScreenshotBtn: document.getElementById("closeScreenshotBtn"),
+  lightboxImg: document.getElementById("lightboxImg"),
+  lightboxDownloadBtn: document.getElementById("lightboxDownloadBtn"),
+  lightboxCopyBtn: document.getElementById("lightboxCopyBtn"),
+  lightboxDeleteBtn: document.getElementById("lightboxDeleteBtn"),
+  lightboxStatus: document.getElementById("lightboxStatus")
 };
+
+let currentLightboxShot = null;
 
 function activeTab() {
   return state.tabs.find(t => t.id === state.activeTabId) || state.tabs[0];
@@ -91,6 +102,7 @@ function renderAll() {
   renderSnippets();
   renderHighlights();
   renderNotes();
+  renderScreenshots();
   renderSettingsUI();
 }
 
@@ -289,7 +301,8 @@ el.importDataInput.addEventListener("change", async () => {
       id: t.id,
       name: t.name || "Note",
       notes: typeof t.notes === "string" ? t.notes : "",
-      highlights: Array.isArray(t.highlights) ? t.highlights : []
+      highlights: Array.isArray(t.highlights) ? t.highlights : [],
+      screenshots: Array.isArray(t.screenshots) ? t.screenshots : []
     }));
     const activeTabId = tabs.some(t => t.id === data.activeTabId) ? data.activeTabId : (tabs[0] && tabs[0].id) || null;
     const snippets = Array.isArray(data.snippets) ? data.snippets : [];
@@ -411,7 +424,7 @@ async function closeTab(tabId) {
   let remaining = state.tabs.filter(t => t.id !== tabId);
   let newActive = state.activeTabId;
   if (remaining.length === 0) {
-    const fresh = { id: uid(), name: "Note 1", notes: "", highlights: [] };
+    const fresh = { id: uid(), name: "Note 1", notes: "", highlights: [], screenshots: [] };
     remaining = [fresh];
     newActive = fresh.id;
   } else if (tabId === state.activeTabId) {
@@ -423,7 +436,7 @@ async function closeTab(tabId) {
 
 el.newTabBtn.addEventListener("click", async () => {
   const n = state.tabs.length + 1;
-  const fresh = { id: uid(), name: `Note ${n}`, notes: "", highlights: [] };
+  const fresh = { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [] };
   const tabs = [...state.tabs, fresh];
   await persist({ tabs, activeTabId: fresh.id });
   renderAll();
@@ -695,6 +708,115 @@ el.notesArea.addEventListener("input", () => {
     el.saveIndicator.classList.add("visible");
     setTimeout(() => el.saveIndicator.classList.remove("visible"), 900);
   }, 400);
+});
+
+/* ---------------- Screenshots ---------------- */
+
+function renderScreenshots() {
+  el.screenshotsStrip.innerHTML = "";
+  const tab = activeTab();
+  const shots = tab ? tab.screenshots || [] : [];
+
+  if (shots.length === 0) {
+    const empty = document.createElement("div");
+    empty.className = "empty-state screenshots-empty";
+    empty.textContent = "No screenshots yet for this note.";
+    el.screenshotsStrip.appendChild(empty);
+    return;
+  }
+
+  shots.forEach(shot => {
+    const thumb = document.createElement("button");
+    thumb.className = "screenshot-thumb";
+    thumb.style.backgroundImage = `url("${shot.dataUrl}")`;
+    thumb.title = new Date(shot.time).toLocaleString();
+    thumb.addEventListener("click", () => openLightbox(shot));
+    el.screenshotsStrip.appendChild(thumb);
+  });
+}
+
+el.captureBtn.addEventListener("click", async () => {
+  const tab = activeTab();
+  if (!tab) return;
+  el.captureBtn.disabled = true;
+  try {
+    const dataUrl = await chrome.tabs.captureVisibleTab(undefined, { format: "png" });
+    const shot = { id: uid(), dataUrl, time: Date.now() };
+    const updatedTabs = state.tabs.map(t =>
+      t.id === tab.id ? { ...t, screenshots: [shot, ...(t.screenshots || [])] } : t
+    );
+    await persist({ tabs: updatedTabs });
+    renderScreenshots();
+  } catch (err) {
+    // Fails on chrome:// pages, the Web Store, other extension pages, or if
+    // called more than ~2x/second (Chrome's built-in rate limit).
+    alert(err && err.message ? err.message : "Couldn't capture a screenshot of this page.");
+  } finally {
+    el.captureBtn.disabled = false;
+  }
+});
+
+function openLightbox(shot) {
+  currentLightboxShot = shot;
+  el.lightboxImg.src = shot.dataUrl;
+  el.lightboxStatus.textContent = "";
+  el.lightboxStatus.classList.remove("error");
+  el.screenshotModal.classList.remove("hidden");
+}
+
+function closeLightbox() {
+  el.screenshotModal.classList.add("hidden");
+  currentLightboxShot = null;
+}
+
+el.closeScreenshotBtn.addEventListener("click", closeLightbox);
+el.screenshotModal.addEventListener("click", e => {
+  if (e.target === el.screenshotModal) closeLightbox();
+});
+
+el.lightboxDownloadBtn.addEventListener("click", async () => {
+  if (!currentLightboxShot) return;
+  const stamp = new Date(currentLightboxShot.time).toISOString().slice(0, 19).replace(/[:T]/g, "-");
+  try {
+    // Use a Blob URL rather than the raw data: URL — more reliable with
+    // chrome.downloads for larger images.
+    const res = await fetch(currentLightboxShot.dataUrl);
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    await chrome.downloads.download({ url, filename: `notedock-screenshot-${stamp}.png`, saveAs: true });
+    setTimeout(() => URL.revokeObjectURL(url), 30000);
+  } catch (err) {
+    el.lightboxStatus.textContent = "Download didn't start.";
+    el.lightboxStatus.classList.add("error");
+  }
+});
+
+el.lightboxCopyBtn.addEventListener("click", async () => {
+  if (!currentLightboxShot) return;
+  try {
+    const res = await fetch(currentLightboxShot.dataUrl);
+    const blob = await res.blob();
+    await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
+    flashCopied(el.lightboxCopyBtn);
+  } catch (err) {
+    el.lightboxStatus.textContent = "Couldn't copy the image.";
+    el.lightboxStatus.classList.add("error");
+  }
+});
+
+el.lightboxDeleteBtn.addEventListener("click", async () => {
+  if (!currentLightboxShot) return;
+  const ok = confirm("Delete this screenshot? This can't be undone.");
+  if (!ok) return;
+  const tab = activeTab();
+  if (!tab) return;
+  const shotId = currentLightboxShot.id;
+  const updatedTabs = state.tabs.map(t =>
+    t.id === tab.id ? { ...t, screenshots: (t.screenshots || []).filter(s => s.id !== shotId) } : t
+  );
+  await persist({ tabs: updatedTabs });
+  renderScreenshots();
+  closeLightbox();
 });
 
 loadState();

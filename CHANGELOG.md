@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.4.0 — 2026-08-07
+
+- Screenshots: a Capture button at the bottom of Notes grabs the visible
+  page (`chrome.tabs.captureVisibleTab`) and adds it to a per-note-tab
+  thumbnail gallery, newest first. Click a thumbnail to open it in a
+  lightbox with Download (real "Save As" prompt via `chrome.downloads`,
+  new `downloads` permission), Copy (image to clipboard), and Delete.
+- Screenshots carry over correctly through Export/Import backups.
+
 ## 1.3.0 — 2026-08-07
 
 - Settings: Export data downloads everything (tabs, snippets, settings) as

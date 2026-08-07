@@ -2,12 +2,14 @@
 
 A Chrome side panel for keeping notes docked open while you browse: separate
 note tabs for whatever you're working on, a set of fixed "quick copy"
-snippets you manage yourself, and the ability to save highlighted text from
-any page straight into your notes with one click.
+snippets you manage yourself, the ability to save highlighted text (and
+screenshots) from any page straight into your notes with one click, and
+appearance/backup settings on top.
 
 Built to be job-agnostic — it doesn't assume call-center work, sales, support,
 or any specific workflow. "Note" tabs are generic containers for whatever the
-user is currently focused on.
+user is currently focused on. Everything lives in `chrome.storage.local`;
+the extension makes zero network requests.
 
 ## Install (unpacked)
 
@@ -30,20 +32,34 @@ user is currently focused on.
   selection ("Save to sidebar") and tears it down again immediately after.
   No persistent overlay, no polling, no page mutation.
 - `sidepanel.html/css/js` — the panel UI itself. Renders note tabs, the
-  quick-copy snippet list (with an edit mode), the list of highlights saved
-  to the active note tab, and a notes textarea that autosaves (debounced,
-  400ms) per tab.
+  quick-copy snippet list (drag-to-reorder in edit mode), the list of
+  highlights saved to the active note tab, a notes textarea that autosaves
+  (debounced, 400ms) per tab, a per-tab screenshot gallery, and a Settings
+  modal (theme, text size, font, background image, JSON export/import).
 - Data model in `chrome.storage.local`:
   ```
   {
-    tabs: [{ id, name, notes, highlights: [{ id, text, source, title, time }] }],
+    tabs: [{
+      id, name, notes,
+      highlights: [{ id, text, source, title, url, time }],
+      screenshots: [{ id, dataUrl, time }]
+    }],
     activeTabId: string,
-    snippets: [{ id, label, value }]
+    snippets: [{ id, label, value }],
+    settings: { theme, backgroundImage, font, textSize }
   }
   ```
+  `highlights[].url` is a text-fragment deep link (`#:~:text=...`) back to
+  the exact highlighted passage, the same mechanism behind Chrome's
+  built-in "Copy link to highlight". `screenshots[].dataUrl` comes from
+  `chrome.tabs.captureVisibleTab` (viewport-only, not full-page).
 - The panel listens for `chrome.storage.onChanged` so it stays in sync
   whether a highlight was saved from a background tab or storage changed in
   another window.
+- `unlimitedStorage` and `downloads` permissions exist specifically for
+  background images / screenshots and for the screenshot lightbox's
+  Download button (`chrome.downloads.download` with `saveAs: true`, so it
+  always prompts for a location rather than silently saving).
 
 ## Known gaps / good next steps for a developer
 
@@ -62,15 +78,15 @@ user is currently focused on.
   current architecture blocks adding this — a content script could post page
   text to a background call to a summarization API, or highlights could be
   batch-processed on save.
-- **No sync across devices.** Currently `chrome.storage.local` (5MB cap,
-  device-local). Could move to `chrome.storage.sync` (much smaller cap,
-  ~100KB) or a real backend if cross-device persistence becomes a
-  requirement.
+- **No real cross-device sync.** Export/Import (Settings > Backup) covers
+  manual transfer between machines; there's no automatic sync.
+  `chrome.storage.sync` exists but caps out around 100KB total — nowhere
+  near enough once screenshots are involved. Real sync means a backend.
 - **No automated tests.** It's small enough that this was done manually so
   far; a `tests/` folder with basic DOM/unit tests around the storage-sync
   logic in `sidepanel.js` would be the highest-value addition.
 - **Icons are placeholder-quality**, generated programmatically — worth a
-  real design pass if this becomes a public listing.
+  real design pass before a public Chrome Web Store listing.
 
 ## Version history
 

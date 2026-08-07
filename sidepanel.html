@@ -67,7 +67,40 @@
       <span id="saveIndicator" class="save-indicator"></span>
     </div>
     <textarea id="notesArea" placeholder="Notes for this one..."></textarea>
+
+    <div class="screenshots-head">
+      <span class="settings-label">Screenshots</span>
+      <button class="small-btn capture-btn" id="captureBtn">
+        <svg viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path>
+          <circle cx="12" cy="13" r="4"></circle>
+        </svg>
+        <span>Capture</span>
+      </button>
+    </div>
+    <div id="screenshotsStrip" class="screenshots-strip"></div>
   </section>
+
+  <div id="screenshotModal" class="settings-modal hidden">
+    <div class="lightbox-card">
+      <div class="panel-head">
+        <h2>Screenshot</h2>
+        <button class="icon-btn" id="closeScreenshotBtn" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <img id="lightboxImg" class="lightbox-img" alt="Screenshot preview" />
+      <div class="lightbox-actions">
+        <button class="small-btn" id="lightboxDownloadBtn">Download</button>
+        <button class="small-btn secondary-btn" id="lightboxCopyBtn">Copy</button>
+        <button class="small-btn secondary-btn danger-btn" id="lightboxDeleteBtn">Delete</button>
+      </div>
+      <div id="lightboxStatus" class="bg-status"></div>
+    </div>
+  </div>
 
   <div id="settingsModal" class="settings-modal hidden">
     <div class="settings-card">
