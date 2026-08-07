@@ -2,6 +2,15 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.17.1 — 2026-08-07
+
+- Fixed the "Save to sidebar" toggle getting stuck as if it were off even
+  after turning it back on. The panel-is-open flag was a plain variable in
+  background.js, which Chrome resets when it recycles the (normally idle)
+  background service worker — after that, nothing was left to set it back
+  to true until the panel was fully closed and reopened. It now lives in
+  chrome.storage.session, which survives that recycling.
+
 ## 1.17.0 — 2026-08-07
 
 - Dark theme palette redone, modeled on GitHub's Dark theme — one of the

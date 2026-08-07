@@ -63,12 +63,19 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => 
 // is how content.js knows whether NoteDock is actually open right now,
 // so the "Save to sidebar" prompt never shows up with nothing there to
 // save to.
-let sidePanelOpen = false;
+//
+// The open/closed flag itself lives in chrome.storage.session rather than
+// a plain variable: this service worker gets torn down and restarted by
+// Chrome after ~30s idle, which would silently reset a plain variable back
+// to its default (false) even while the panel is still genuinely open,
+// with nothing left to fire onConnect again and correct it. storage.session
+// survives that restart — it only clears when the browser itself closes,
+// which is the lifetime this actually needs.
 chrome.runtime.onConnect.addListener(port => {
   if (port.name !== "sidepanel") return;
-  sidePanelOpen = true;
+  chrome.storage.session.set({ sidePanelOpen: true });
   port.onDisconnect.addListener(() => {
-    sidePanelOpen = false;
+    chrome.storage.session.set({ sidePanelOpen: false });
   });
 });
 
@@ -84,9 +91,12 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
   if (message?.type === "CAN_SHOW_SAVE_PILL") {
     (async () => {
-      const { settings } = await chrome.storage.local.get(["settings"]);
+      const [{ settings }, { sidePanelOpen }] = await Promise.all([
+        chrome.storage.local.get(["settings"]),
+        chrome.storage.session.get(["sidePanelOpen"])
+      ]);
       const enabled = !settings || settings.highlightPromptEnabled !== false;
-      sendResponse({ allowed: sidePanelOpen && enabled });
+      sendResponse({ allowed: !!sidePanelOpen && enabled });
     })();
     return true;
   }
