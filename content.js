@@ -132,7 +132,15 @@
     host.style.top = `${top}px`;
 
     pill.addEventListener("mousedown", e => e.preventDefault()); // don't clear selection
-    pill.addEventListener("click", () => {
+    pill.addEventListener("click", async () => {
+      // Best-effort — clipboard writes can fail (e.g. an unfocused iframe),
+      // but that should never block the save itself.
+      let copied = false;
+      try {
+        await navigator.clipboard.writeText(text);
+        copied = true;
+      } catch { /* ignore */ }
+
       chrome.runtime.sendMessage(
         {
           type: "SAVE_HIGHLIGHT",
@@ -143,7 +151,7 @@
         },
         () => {
           pill.classList.add("saved");
-          pill.querySelector("span").textContent = "Saved";
+          pill.querySelector("span").textContent = copied ? "Saved & copied" : "Saved";
           clearTimeout(hideTimer);
           hideTimer = setTimeout(removePill, 900);
         }

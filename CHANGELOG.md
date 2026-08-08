@@ -3,6 +3,15 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.23.0 — 2026-08-08
+
+- "Save to sidebar" now also copies the highlighted text to the
+  clipboard, so pasting right after saving grabs what you just
+  highlighted instead of whatever was on the clipboard before. The pill
+  reads "Saved & copied" when both succeed. Best-effort: if the clipboard
+  write fails (e.g. an unfocused iframe), the save still goes through and
+  the pill just reads "Saved" as before.
+
 ## 1.22.1 — 2026-08-08
 
 - Restored the "link back to the exact spot" behavior for saved
