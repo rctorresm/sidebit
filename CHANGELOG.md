@@ -2,6 +2,12 @@
 
 All notable changes to NoteDock are recorded here. Format: newest first.
 
+## 1.20.1 — 2026-08-07
+
+- Notes box now starts at 15 lines tall instead of ~4. Still grows with
+  content up to 25 lines, then scrolls internally past that — that part
+  was already built, only the starting height changed.
+
 ## 1.20.0 — 2026-08-07
 
 - Removed the in-app "NoteDock" header (icon + wordmark) — it duplicated

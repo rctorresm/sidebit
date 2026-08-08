@@ -616,10 +616,10 @@ body {
 }
 .save-indicator.visible { opacity: 1; }
 #notesArea {
-  /* Grows with content (JS sets height on input) between a ~4-line floor
+  /* Grows with content (JS sets height on input) between a ~15-line floor
      and a ~25-line ceiling, in em so it scales with the text-size setting;
      past the ceiling it scrolls internally instead of growing further. */
-  min-height: 6em;
+  min-height: 22.5em;
   max-height: 37.5em;
   overflow-y: auto;
   resize: none;
