@@ -113,14 +113,12 @@ You'll also be asked to certify:
 - [x] Fill in your name/entity in `LICENSE` — done (Roberto Torres).
       Also fixed a leftover "NoteDock" reference in the same file that
       should have been renamed to "Sidebit" along with everything else.
-- [ ] Privacy policy hosting: the Claude Artifact URL works for the
-      review, but **it must be set to Shared, not private** — Google's
-      reviewers load it without being signed into your account, so a
-      private artifact will look broken to them. Open the link and check
-      the share menu before submitting; this can't be set programmatically.
-      Recommendation: fine to launch on the Artifact URL, but consider
-      moving it to something you control (GitHub Pages, a personal
-      domain) later so it isn't dependent on a Claude session existing.
+- [x] Privacy policy hosting: confirmed Shared, not private — verified
+      2026-08-08 by opening the link from a different, logged-out
+      browser and it loaded fine. Fine to launch on the Artifact URL;
+      consider moving it to something you control (GitHub Pages, a
+      personal domain) later so it isn't dependent on a Claude session
+      existing.
 - [x] Store listing screenshots (1280x800) — done, 4 shots delivered
       2026-08-08: overview, save-to-sidebar highlight feature, settings/
       customization, and screenshot gallery. All synthetic multi-industry
