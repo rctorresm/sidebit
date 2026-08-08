@@ -3,6 +3,19 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.24.0 — 2026-08-08
+
+- Settings gear icon is a bit bigger (14px → 18px) — it was reading as
+  too small, especially against the larger text sizes below.
+- Text size tiers shifted up ~2px across the board (Small/Medium/Large
+  scale factors: 0.92/1/1.15 → 1.07/1.15/1.3) — Small was uncomfortably
+  tight, so the whole range moved up a notch. New Medium renders at
+  roughly the old Large size.
+- Default text size is now Medium instead of Large, since Medium is now
+  sized comfortably enough to be the everyday default. (Existing
+  installs keep whatever size they already have selected — this only
+  affects fresh installs.)
+
 ## 1.23.0 — 2026-08-08
 
 - "Save to sidebar" now also copies the highlighted text to the

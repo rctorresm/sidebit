@@ -8,7 +8,7 @@ function countWords(text) {
 const DEFAULT_SETTINGS = {
   theme: "light",
   font: "verdana",
-  textSize: "large",
+  textSize: "medium",
   quickCopyCollapsed: false,
   savedPagesCollapsed: false,
   highlightPromptEnabled: true,
@@ -54,7 +54,10 @@ const FONT_STACKS = {
   georgia: "Georgia, 'Times New Roman', serif",
   verdana: "Verdana, Geneva, sans-serif"
 };
-const TEXT_SCALES = { small: 0.92, medium: 1, large: 1.15 };
+// Shifted up ~2px across the board (on the 13px body-text baseline) from
+// the original 0.92/1/1.15 — Small was uncomfortably tight, so the whole
+// range moved up a notch and Medium is now the comfortable everyday size.
+const TEXT_SCALES = { small: 1.07, medium: 1.15, large: 1.3 };
 
 const MAX_TRASH = 50;
 
