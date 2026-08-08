@@ -108,8 +108,8 @@ You'll also be asked to certify:
 
 ## Before you submit — still open
 
-- [ ] Fill in your real contact email in the privacy policy page (currently
-      a placeholder) and re-publish it.
+- [x] Fill in your real contact email in the privacy policy page — done
+      (rob.sidebit@gmail.com, re-published 2026-08-08).
 - [ ] Fill in your name/entity in `LICENSE` (currently a placeholder).
 - [ ] Decide long-term hosting for the privacy policy — the Claude
       Artifact URL works for now (make sure it's set to Shared, not
