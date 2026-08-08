@@ -121,20 +121,15 @@ You'll also be asked to certify:
       Recommendation: fine to launch on the Artifact URL, but consider
       moving it to something you control (GitHub Pages, a personal
       domain) later so it isn't dependent on a Claude session existing.
-- [ ] Store listing screenshots (1280x800 or 640x400) — not yet created.
-      Recommendation: 3-4 shots of the real loaded extension (not a mock)
-      with realistic-but-fake sample content (no real coworker names,
-      ticket numbers, or company data, since these become public) —
-      e.g. the main panel with a couple of note tabs and Quick Copy
-      entries, the Settings panel showing theme/accent options, and the
-      screenshot gallery. Ask to have this driven next when ready.
+- [x] Store listing screenshots (1280x800) — done, 4 shots delivered
+      2026-08-08: overview, save-to-sidebar highlight feature, settings/
+      customization, and screenshot gallery. All synthetic multi-industry
+      sample data (fake company names, `.example` domains, generated
+      placeholder chart/table images) — nothing from real work.
 - [x] Icon redesign — done (dark badge, two-block "docked panel" mark).
-- [ ] Public vs. Unlisted visibility. Recommendation: start **Unlisted**.
-      Nothing here is risky to make public (zero data collection, no
-      backend), but Unlisted still gives full Store installability via a
-      direct link — for you and anyone you share it with — without
-      showing up in Chrome Web Store search results or inviting reviews/
-      support requests from strangers who found it by browsing. Visibility
-      can be switched to Public later at any time without a new review.
+- [x] Public vs. Unlisted visibility — decided: **Unlisted**. Confirmed
+      this still allows full installability for anyone given the direct
+      listing link; it only opts out of Chrome Web Store search/category
+      discovery. Can be switched to Public later without a new review.
 - [x] Separate Google account for the $5 CWS developer registration —
       already decided (yes, keep it off your personal account).
