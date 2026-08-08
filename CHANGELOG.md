@@ -3,6 +3,20 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.25.0 — 2026-08-08
+
+- Screenshots: "Select" is now a labeled button next to Capture (Capture
+  first, Select after) instead of a small, easy-to-miss icon.
+- Screenshot thumbnails get a second hover button — a delete icon at the
+  bottom-right (copy stays top-right) — for removing a single screenshot
+  without opening it first. Asks for confirmation before deleting, same
+  as every other delete in the app, and the deleted screenshot is still
+  recoverable from Recently Deleted.
+- Every trash-can icon in the app (Clear all highlights, Delete selected
+  screenshots, the new per-thumbnail delete, and the existing snippet/
+  highlight delete buttons) now uses the same vibrant red so delete
+  actions are easy to spot at a glance.
+
 ## 1.24.2 — 2026-08-08
 
 - Reverted the "Saved from pages" link icon button — too small to

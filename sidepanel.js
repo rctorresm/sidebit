@@ -1260,6 +1260,27 @@ function renderScreenshots() {
     });
     thumb.appendChild(copyBtn);
 
+    const deleteBtn = document.createElement("button");
+    deleteBtn.type = "button";
+    deleteBtn.className = "thumb-delete-btn";
+    deleteBtn.title = "Delete screenshot";
+    deleteBtn.setAttribute("aria-label", "Delete screenshot");
+    deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`;
+    deleteBtn.addEventListener("click", async e => {
+      e.stopPropagation();
+      const ok = confirm("Delete this screenshot? This can't be undone.");
+      if (!ok) return;
+      const index = (tab.screenshots || []).findIndex(s => s.id === shot.id);
+      const updatedTabs = state.tabs.map(t =>
+        t.id === tab.id ? { ...t, screenshots: (t.screenshots || []).filter(s => s.id !== shot.id) } : t
+      );
+      await persist({ tabs: updatedTabs });
+      await trashItem({ type: "screenshot", screenshot: shot, tabId: tab.id, tabName: tab.name, index });
+      renderScreenshots();
+      renderTrash();
+    });
+    thumb.appendChild(deleteBtn);
+
     function activate() {
       if (screenshotSelectionMode) toggleScreenshotSelected(shot.id);
       else openLightbox(shot);
