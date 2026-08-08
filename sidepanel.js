@@ -7,8 +7,8 @@ function countWords(text) {
 
 const DEFAULT_SETTINGS = {
   theme: "light",
-  font: "system",
-  textSize: "medium",
+  font: "verdana",
+  textSize: "large",
   quickCopyCollapsed: false,
   savedPagesCollapsed: false,
   highlightPromptEnabled: true,
@@ -18,18 +18,22 @@ const DEFAULT_SETTINGS = {
   darkAccentButton: "#58a6ff"
 };
 
-// Four options per theme, each chosen for solid contrast against that
-// theme's background — darker/saturated for Light, lighter/pastel for
-// Dark — so every combination stays readable regardless of which one
-// someone picks for "borders & text" vs. "buttons".
+// "Default" (a neutral gray, matching --text-dim) leads each row as an
+// escape hatch back to an uncolored look; the four saturated options after
+// it are each chosen for solid contrast against that theme's background —
+// darker/saturated for Light, lighter/pastel for Dark — so every
+// combination stays readable regardless of which one someone picks for
+// "borders & boxes" vs. "buttons".
 const ACCENT_SWATCHES = {
   light: [
+    { color: "#565c68", name: "Default" },
     { color: "#2563eb", name: "Blue" },
     { color: "#7c3aed", name: "Purple" },
     { color: "#047857", name: "Green" },
     { color: "#be185d", name: "Rose" }
   ],
   dark: [
+    { color: "#9198a1", name: "Default" },
     { color: "#58a6ff", name: "Blue" },
     { color: "#bc8cff", name: "Purple" },
     { color: "#56d364", name: "Green" },

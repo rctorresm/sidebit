@@ -3,6 +3,21 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.22.0 — 2026-08-08
+
+- Reworked the accent color settings: the "Borders & text" row is now
+  "Borders & boxes" — general UI text (panel titles, quips, tooltips, tab
+  labels) is back to a flat neutral gray (`--text-dim`) regardless of the
+  chosen accent, while the accent color now also outlines and lightly
+  tints the four main panel boxes (Quick Copy, Saved from Pages, Notes,
+  Screenshots), on top of what it already colored (borders, active tab,
+  focus rings, etc.). The actual notes textarea is untouched either way.
+- Added a gray "Default" swatch as the first option in all four accent
+  rows (light/dark × borders-and-boxes/buttons) — an easy way back to an
+  uncolored look without hunting for the original blue.
+- New installs now default to the Verdana font and Large text size
+  instead of System/Medium.
+
 ## 1.21.0 — 2026-08-08
 
 - Renamed the extension from NoteDock to Sidebit — the manifest name,

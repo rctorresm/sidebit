@@ -189,7 +189,7 @@ body {
   flex: none;
 }
 .note-tab.active {
-  color: var(--text);
+  color: var(--text-dim);
   background: var(--surface-2);
   border-color: var(--accent-line);
 }
@@ -197,7 +197,7 @@ body {
   background: transparent;
   border: none;
   outline: none;
-  color: var(--text);
+  color: var(--text-dim);
   font: inherit;
   width: 90px;
 }
@@ -255,8 +255,8 @@ body {
 /* Panels */
 .panel {
   margin: 0 14px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: color-mix(in srgb, var(--accent-line) 6%, var(--surface));
+  border: 1px solid var(--accent-line);
   border-radius: var(--radius-lg);
   padding: 10px 12px;
   flex: none;
@@ -273,7 +273,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-faint);
+  color: var(--text-dim);
 }
 .panel-head-title {
   display: flex;
@@ -287,7 +287,7 @@ body {
 
 .counter-text {
   font-size: calc(10px * var(--text-scale));
-  color: var(--text-faint);
+  color: var(--text-dim);
   /* Its own full-width line under the title, so a long quip wraps instead
      of truncating — flex-basis: 100% forces the wrap unconditionally
      (rather than only when it doesn't fit) so the title row's line count
@@ -812,7 +812,7 @@ body {
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.06em;
-  color: var(--text-faint);
+  color: var(--text-dim);
   margin-bottom: 8px;
 }
 
