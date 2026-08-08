@@ -3,6 +3,12 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.24.1 — 2026-08-08
+
+- Quick copy's header buttons now match Saved from Pages: collapse
+  chevron is always the rightmost button, with Manage snippets (pencil)
+  before it instead of after.
+
 ## 1.24.0 — 2026-08-08
 
 - Settings gear icon is a bit bigger (14px → 18px) — it was reading as
