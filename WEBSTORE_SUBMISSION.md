@@ -110,12 +110,31 @@ You'll also be asked to certify:
 
 - [x] Fill in your real contact email in the privacy policy page — done
       (rob.sidebit@gmail.com, re-published 2026-08-08).
-- [ ] Fill in your name/entity in `LICENSE` (currently a placeholder).
-- [ ] Decide long-term hosting for the privacy policy — the Claude
-      Artifact URL works for now (make sure it's set to Shared, not
-      private, so Google's reviewers can actually load it), but consider
-      moving it somewhere you control (GitHub Pages, a personal domain)
-      if you want it to outlive this conversation.
+- [x] Fill in your name/entity in `LICENSE` — done (Roberto Torres).
+      Also fixed a leftover "NoteDock" reference in the same file that
+      should have been renamed to "Sidebit" along with everything else.
+- [ ] Privacy policy hosting: the Claude Artifact URL works for the
+      review, but **it must be set to Shared, not private** — Google's
+      reviewers load it without being signed into your account, so a
+      private artifact will look broken to them. Open the link and check
+      the share menu before submitting; this can't be set programmatically.
+      Recommendation: fine to launch on the Artifact URL, but consider
+      moving it to something you control (GitHub Pages, a personal
+      domain) later so it isn't dependent on a Claude session existing.
 - [ ] Store listing screenshots (1280x800 or 640x400) — not yet created.
+      Recommendation: 3-4 shots of the real loaded extension (not a mock)
+      with realistic-but-fake sample content (no real coworker names,
+      ticket numbers, or company data, since these become public) —
+      e.g. the main panel with a couple of note tabs and Quick Copy
+      entries, the Settings panel showing theme/accent options, and the
+      screenshot gallery. Ask to have this driven next when ready.
 - [x] Icon redesign — done (dark badge, two-block "docked panel" mark).
-- [ ] Decide Public vs. Unlisted visibility for the listing.
+- [ ] Public vs. Unlisted visibility. Recommendation: start **Unlisted**.
+      Nothing here is risky to make public (zero data collection, no
+      backend), but Unlisted still gives full Store installability via a
+      direct link — for you and anyone you share it with — without
+      showing up in Chrome Web Store search results or inviting reviews/
+      support requests from strangers who found it by browsing. Visibility
+      can be switched to Public later at any time without a new review.
+- [x] Separate Google account for the $5 CWS developer registration —
+      already decided (yes, keep it off your personal account).
