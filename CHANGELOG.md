@@ -3,6 +3,18 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.22.1 — 2026-08-08
+
+- Restored the "link back to the exact spot" behavior for saved
+  highlights: the source link now uses a `#:~:text=` deep-link fragment
+  again (same mechanism as Chrome's built-in "Copy link to highlight"),
+  instead of just linking the plain page URL. This was simplified away in
+  v1.12.0 to rule it out as a cause of the Zendesk "Save to sidebar" pill
+  not appearing — that turned out to be unrelated and was fixed
+  separately in v1.13.0 (iframe re-injection), so there was no longer a
+  reason to keep the plain-URL version. Existing saved highlights with
+  the plain-URL format still open fine.
+
 ## 1.22.0 — 2026-08-08
 
 - Reworked the accent color settings: the "Borders & text" row is now
