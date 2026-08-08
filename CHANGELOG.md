@@ -1,6 +1,19 @@
 # Changelog
 
-All notable changes to NoteDock are recorded here. Format: newest first.
+All notable changes to Sidebit (formerly NoteDock) are recorded here.
+Format: newest first.
+
+## 1.21.0 — 2026-08-08
+
+- Renamed the extension from NoteDock to Sidebit — the manifest name,
+  page title, backup file naming (`sidebitBackup` marker,
+  `sidebit-backup-*.json`, `sidebit-screenshot-*.png`), all in-app copy,
+  README, and the published privacy policy. The icon didn't need any
+  rework — it's an abstract mark that never spelled out the old name.
+  Older backup files still import fine; the validator never actually
+  checked the marker field, only the data shape. Historical changelog
+  entries below keep the old name since they're an accurate record of
+  what was true at the time.
 
 ## 1.20.1 — 2026-08-07
 

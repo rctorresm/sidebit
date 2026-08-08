@@ -10,8 +10,8 @@
   // That means this IIFE can run more than once in the same page/frame —
   // tear down whatever the previous instance attached first, so listeners
   // never double up.
-  if (window.__noteDockCleanup) {
-    try { window.__noteDockCleanup(); } catch { /* ignore */ }
+  if (window.__sidebitCleanup) {
+    try { window.__sidebitCleanup(); } catch { /* ignore */ }
   }
 
   let host = null;
@@ -146,7 +146,7 @@
     });
   }
 
-  // Only shows the pill if NoteDock's side panel is actually open right now
+  // Only shows the pill if Sidebit's side panel is actually open right now
   // AND the "Save to sidebar" prompt hasn't been toggled off — otherwise
   // there's nowhere for a click on it to save to.
   function showPillIfAllowed(rect, text) {
@@ -208,7 +208,7 @@
   document.addEventListener("mousedown", onMouseDown);
   document.addEventListener("keydown", onKeyDown);
 
-  window.__noteDockCleanup = () => {
+  window.__sidebitCleanup = () => {
     clearTimeout(hideTimer);
     removePill();
     document.removeEventListener("mouseup", onMouseUp);

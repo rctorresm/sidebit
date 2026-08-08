@@ -6,7 +6,7 @@ the packaged zip.
 
 ## Single purpose description
 
-> NoteDock is a side-panel note-taking tool. It lets users keep notes,
+> Sidebit is a side-panel note-taking tool. It lets users keep notes,
 > quick-copy snippets, highlighted text, and screenshots organized in one
 > place while browsing, without leaving the current tab.
 
@@ -17,7 +17,7 @@ the packaged zip.
 
 ## Store listing — detailed description
 
-> NoteDock is a Chrome side panel for keeping notes docked open while you
+> Sidebit is a Chrome side panel for keeping notes docked open while you
 > browse.
 >
 > - Separate note tabs for whatever you're working on — pin the ones you
@@ -32,7 +32,7 @@ the packaged zip.
 > - A Recently Deleted trash with undo, per section
 > - Export/import your data as a backup file
 >
-> NoteDock stores everything locally in your browser. It makes no network
+> Sidebit stores everything locally in your browser. It makes no network
 > requests, has no account or sign-in, and does not collect, transmit, or
 > sell any data. See the full privacy policy for details.
 >
@@ -60,7 +60,7 @@ somewhere under your own control long-term.)
 > default cap is hit.
 
 **sidePanel**
-> NoteDock's entire UI lives in Chrome's native side panel (via the
+> Sidebit's entire UI lives in Chrome's native side panel (via the
 > chrome.sidePanel API) rather than a popup, so notes stay visible and
 > persist across tab switches while the user browses.
 

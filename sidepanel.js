@@ -40,7 +40,7 @@ const ACCENT_SWATCHES = {
 // Keeping this port open (for as long as the side panel document is open)
 // is how background.js knows whether to answer "yes" to a content script
 // asking whether it's OK to show the "Save to sidebar" prompt — that
-// prompt should never appear while NoteDock itself is closed.
+// prompt should never appear while Sidebit itself is closed.
 chrome.runtime.connect({ name: "sidepanel" });
 
 // Three self-contained, universally pre-installed fonts chosen for on-screen
@@ -460,7 +460,7 @@ el.fontChoices.addEventListener("click", async e => {
 
 el.exportDataBtn.addEventListener("click", () => {
   const backup = {
-    noteDockBackup: 1,
+    sidebitBackup: 1,
     exportedAt: new Date().toISOString(),
     tabs: state.tabs,
     activeTabId: state.activeTabId,
@@ -473,7 +473,7 @@ el.exportDataBtn.addEventListener("click", () => {
   const dateStamp = backup.exportedAt.slice(0, 10);
   const a = document.createElement("a");
   a.href = url;
-  a.download = `notedock-backup-${dateStamp}.json`;
+  a.download = `sidebit-backup-${dateStamp}.json`;
   document.body.appendChild(a);
   a.click();
   a.remove();
@@ -498,12 +498,12 @@ el.importDataInput.addEventListener("change", async () => {
     const text = await file.text();
     const data = JSON.parse(text);
     if (!isValidBackupShape(data)) {
-      throw new Error("That file doesn't look like a NoteDock backup.");
+      throw new Error("That file doesn't look like a Sidebit backup.");
     }
     const tabCount = data.tabs.length;
     const ok = confirm(
       `Import ${tabCount} note tab${tabCount === 1 ? "" : "s"} from this backup? ` +
-      `This replaces everything currently in NoteDock — that can't be undone.`
+      `This replaces everything currently in Sidebit — that can't be undone.`
     );
     if (!ok) {
       el.backupStatus.textContent = "";
@@ -1329,7 +1329,7 @@ el.downloadSelectedScreenshotsBtn.addEventListener("click", async () => {
       // No saveAs here (unlike the single-image lightbox download) — with
       // several files, a save dialog per file would be unusable. These go
       // straight to the default Downloads folder instead.
-      await chrome.downloads.download({ url, filename: `notedock-screenshot-${stamp}.png` });
+      await chrome.downloads.download({ url, filename: `sidebit-screenshot-${stamp}.png` });
       setTimeout(() => URL.revokeObjectURL(url), 30000);
     } catch {
       /* one failed download shouldn't stop the rest */
@@ -1386,7 +1386,7 @@ el.lightboxDownloadBtn.addEventListener("click", async () => {
     const res = await fetch(currentLightboxShot.dataUrl);
     const blob = await res.blob();
     const url = URL.createObjectURL(blob);
-    await chrome.downloads.download({ url, filename: `notedock-screenshot-${stamp}.png`, saveAs: true });
+    await chrome.downloads.download({ url, filename: `sidebit-screenshot-${stamp}.png`, saveAs: true });
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   } catch (err) {
     el.lightboxStatus.textContent = "Download didn't start.";

@@ -60,7 +60,7 @@ chrome.sidePanel.setPanelBehavior({ openPanelOnActionClick: true }).catch(() => 
 
 // The side panel document holds this port open for as long as it's open —
 // closing the panel (or navigating away from it) fires onDisconnect. This
-// is how content.js knows whether NoteDock is actually open right now,
+// is how content.js knows whether Sidebit is actually open right now,
 // so the "Save to sidebar" prompt never shows up with nothing there to
 // save to.
 //

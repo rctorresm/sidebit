@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
-  "name": "NoteDock",
-  "version": "1.20.1",
+  "name": "Sidebit",
+  "version": "1.21.0",
   "description": "Always-on side panel for quick notes, one-click quick-copy snippets, and saving highlighted text from any page.",
   "permissions": ["storage", "sidePanel", "unlimitedStorage", "downloads", "scripting"],
   "host_permissions": ["<all_urls>"],
@@ -9,7 +9,7 @@
     "service_worker": "background.js"
   },
   "action": {
-    "default_title": "Open NoteDock"
+    "default_title": "Open Sidebit"
   },
   "side_panel": {
     "default_path": "sidepanel.html"

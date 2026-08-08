@@ -1,4 +1,4 @@
-# NoteDock
+# Sidebit
 
 A Chrome side panel for keeping notes docked open while you browse: separate
 note tabs for whatever you're working on, quick-copy snippets (global or
