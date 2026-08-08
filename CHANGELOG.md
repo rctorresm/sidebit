@@ -3,6 +3,16 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.26.0 — 2026-08-08
+
+- Notes: a red trash-can button (top-right of the Notes header, only
+  shown when there's something to clear) wipes the current note's text
+  in one click instead of select-all-and-delete. Prompts for
+  confirmation first, and — matching every other delete in the app — the
+  cleared text is recoverable from Settings > Recently deleted. If you'd
+  already typed something new before restoring, the restored text is
+  placed above it instead of overwriting it.
+
 ## 1.25.0 — 2026-08-08
 
 - Screenshots: "Select" is now a labeled button next to Capture (Capture

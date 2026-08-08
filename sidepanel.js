@@ -91,6 +91,7 @@ const el = {
   notesArea: document.getElementById("notesArea"),
   notesCounter: document.getElementById("notesCounter"),
   saveIndicator: document.getElementById("saveIndicator"),
+  clearNotesBtn: document.getElementById("clearNotesBtn"),
   settingsBtn: document.getElementById("settingsBtn"),
   settingsModal: document.getElementById("settingsModal"),
   closeSettingsBtn: document.getElementById("closeSettingsBtn"),
@@ -191,7 +192,7 @@ async function trashItem(entry) {
 }
 
 function trashTypeLabel(type) {
-  return { tab: "Note tab", highlight: "Highlight", snippet: "Snippet", screenshot: "Screenshot" }[type] || type;
+  return { tab: "Note tab", highlight: "Highlight", snippet: "Snippet", screenshot: "Screenshot", note: "Notes" }[type] || type;
 }
 
 function relativeTime(ms) {
@@ -264,6 +265,7 @@ function trashEntryTitle(entry) {
   if (entry.type === "highlight") return entry.highlight.text.slice(0, 60);
   if (entry.type === "snippet") return entry.snippet.label;
   if (entry.type === "screenshot") return `From "${entry.tabName}"`;
+  if (entry.type === "note") return entry.notes.slice(0, 60);
   return "";
 }
 
@@ -309,6 +311,17 @@ async function restoreTrashEntry(entryId) {
       const idx = Math.min(Math.max(entry.index ?? 0, 0), screenshots.length);
       screenshots.splice(idx, 0, entry.screenshot);
       return { ...t, screenshots };
+    });
+    await persist({ tabs: updatedTabs, activeTabId: tab.id, trash: remainingTrash });
+  } else if (entry.type === "note") {
+    const { tabs, tab } = resolveOwningTab(state.tabs, entry);
+    // Notes is a single field, not a list — if something's been typed since
+    // the clear, put the restored text back above it instead of overwriting.
+    const updatedTabs = tabs.map(t => {
+      if (t.id !== tab.id) return t;
+      const current = t.notes || "";
+      const notes = current ? `${entry.notes}\n\n${current}` : entry.notes;
+      return { ...t, notes };
     });
     await persist({ tabs: updatedTabs, activeTabId: tab.id, trash: remainingTrash });
   }
@@ -1112,9 +1125,23 @@ function renderNotes() {
   if (document.activeElement !== el.notesArea) {
     el.notesArea.value = value;
   }
+  el.clearNotesBtn.classList.toggle("hidden", !value.trim());
   autoGrowNotes();
   updateNotesCounter();
 }
+
+el.clearNotesBtn.addEventListener("click", async () => {
+  const tab = activeTab();
+  if (!tab || !(tab.notes || "").trim()) return;
+  const ok = confirm(`Clear all notes for "${tab.name}"? This can't be undone.`);
+  if (!ok) return;
+  const removedNotes = tab.notes;
+  const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, notes: "" } : t));
+  await persist({ tabs: updatedTabs });
+  await trashItem({ type: "note", notes: removedNotes, tabId: tab.id, tabName: tab.name });
+  renderNotes();
+  renderTrash();
+});
 
 el.notesArea.addEventListener("input", () => {
   autoGrowNotes();

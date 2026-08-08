@@ -421,7 +421,8 @@ body {
    per-thumbnail delete button, so every delete action reads the same way
    regardless of which control it's attached to. */
 #clearHighlightsBtn,
-#deleteSelectedScreenshotsBtn {
+#deleteSelectedScreenshotsBtn,
+#clearNotesBtn {
   color: var(--danger);
 }
 
