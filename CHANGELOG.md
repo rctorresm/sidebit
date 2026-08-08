@@ -3,6 +3,13 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.24.2 — 2026-08-08
+
+- Reverted the "Saved from pages" link icon button — too small to
+  comfortably resize. Back to how it started: the source hostname itself
+  is the clickable link to the highlighted spot (underlines on hover),
+  no separate button next to Copy.
+
 ## 1.24.1 — 2026-08-08
 
 - Quick copy's header buttons now match Saved from Pages: collapse

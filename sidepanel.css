@@ -583,21 +583,13 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+  text-decoration: none;
+}
+a.highlight-source:hover {
+  color: var(--accent-line);
+  text-decoration: underline;
 }
 .highlight-actions { display: flex; gap: 4px; flex: none; align-items: center; }
-.highlight-link-btn {
-  flex: none;
-  display: flex;
-  align-items: center;
-  background: none;
-  border: none;
-  color: var(--text-faint);
-  padding: 4px;
-  border-radius: 6px;
-  cursor: pointer;
-}
-.highlight-link-btn svg { width: 13px; height: 13px; }
-.highlight-link-btn:hover { color: var(--accent-line); background: var(--surface); }
 
 .empty-state {
   color: var(--text-faint);
