@@ -1047,6 +1047,19 @@ function renderHighlights() {
       await navigator.clipboard.writeText(h.text);
       flashCopied(copyBtn);
     });
+    actions.appendChild(copyBtn);
+
+    if (h.url) {
+      const copyLinkBtn = document.createElement("button");
+      copyLinkBtn.className = "copy-btn";
+      copyLinkBtn.textContent = "Link";
+      copyLinkBtn.title = "Copy link to this highlight";
+      copyLinkBtn.addEventListener("click", async () => {
+        await navigator.clipboard.writeText(h.url);
+        flashCopied(copyLinkBtn);
+      });
+      actions.appendChild(copyLinkBtn);
+    }
 
     const del = document.createElement("button");
     del.className = "delete-btn";
@@ -1063,7 +1076,6 @@ function renderHighlights() {
       renderTrash();
     });
 
-    actions.appendChild(copyBtn);
     actions.appendChild(del);
     meta.appendChild(source);
     meta.appendChild(actions);

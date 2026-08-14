@@ -3,6 +3,21 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.27.0 — 2026-08-14
+
+- Saved from pages: each card now has a subtle border (matches the border
+  color used elsewhere in the app) so cards are easier to visually separate.
+- Saved from pages: added a "Link" button next to "Copy" on any highlight
+  that has a source page — copies the link back to where it was
+  highlighted, so you don't have to open the page just to grab the URL.
+  Highlights with no source URL still show just Copy, as before.
+- Screenshots: the "Paste ↑ or →" hint is now a darker gray — it was
+  blending into the background too much to read comfortably.
+- Quick copy: the "i" info tooltip now explains what the orange dot / "All
+  tabs" label actually means and how to toggle a snippet between "All
+  tabs" and "this note only" from Manage snippets — that distinction
+  wasn't obvious from the small dot alone.
+
 ## 1.26.0 — 2026-08-08
 
 - Notes: a red trash-can button (top-right of the Notes header, only

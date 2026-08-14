@@ -570,7 +570,7 @@ body {
   padding: 8px;
   border-radius: var(--radius);
   background: var(--surface-2);
-  border: 1px solid transparent;
+  border: 1px solid var(--border-strong);
 }
 .highlight-text {
   font-size: calc(12.5px * var(--text-scale));
@@ -649,7 +649,7 @@ a.highlight-source:hover {
 .capture-btn { display: inline-flex; align-items: center; gap: 6px; }
 .paste-hint {
   font-size: calc(10px * var(--text-scale));
-  color: var(--text-faint);
+  color: var(--text-dim);
   white-space: nowrap;
   flex: none;
 }
