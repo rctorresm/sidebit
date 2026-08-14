@@ -3,6 +3,20 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.28.0 — 2026-08-14
+
+- Added Spanish as a second language. New "Language" section at the top of
+  Settings — switching is instant, no reload needed, and it's independent
+  of what language Chrome itself is set to. Covers every button, label,
+  tooltip, and confirmation dialog in the app.
+- Quips (the Marvel/DC/Star Wars/etc. one-liners next to the Notes word
+  count) are English wordplay that doesn't translate — in Spanish mode
+  they're replaced with a plain word count instead of a mistranslated joke.
+  Still English-only for now; may get a real Spanish pass later.
+- Purely local: no new permissions, no network calls. Both languages ship
+  as plain text files bundled in the extension package, same as everything
+  else here.
+
 ## 1.27.0 — 2026-08-14
 
 - Saved from pages: each card now has a subtle border (matches the border

@@ -1,0 +1,344 @@
+// Local translation dictionaries for the Sidebit UI. No network calls, no
+// new permissions — these are plain strings bundled into the extension
+// package, same as every other file here. `t(key, vars)` looks a string up
+// in the active language, falling back to English if a key is ever missing
+// in a non-English dictionary (e.g. right after a new string ships before
+// its translation is filled in).
+
+const LOCALES = {
+  en: {
+    "common.undo": "Undo",
+    "common.add": "Add",
+    "common.copy": "Copy",
+    "common.copied": "Copied",
+    "common.label": "Label",
+    "common.value": "Value",
+    "common.remove": "Remove",
+    "common.cancel": "Cancel",
+    "common.close": "Close",
+    "common.delete": "Delete",
+    "common.allTabs": "All tabs",
+    "common.undoRestore": 'Undo: restore "{title}"',
+
+    "tabs.newNote": "+ New note",
+    "tabs.newNoteTitle": "Start a new note",
+    "tabs.closeTitle": "Close this note",
+    "tabs.unpin": "Unpin",
+    "tabs.pinToTop": "Pin to top",
+    "tabs.confirmClose": 'Close "{name}"? You can undo this right after, or restore it later from Settings > Recently deleted.',
+    "tabs.defaultName": "Note {n}",
+    "tabs.restoredName": "Restored note",
+    "tabs.untitled": "Note",
+
+    "quickCopy.heading": "Quick copy",
+    "quickCopy.aboutAria": "About Quick copy",
+    "quickCopy.tooltip": "Save text you paste often — phone numbers, email templates, canned replies, disclaimers. One click to copy, no retyping. The orange dot means \"All tabs\" — that snippet shows up everywhere. No dot means it only shows up on this note. In Manage snippets, click a snippet's dot to switch it between the two.",
+    "quickCopy.manageTitle": "Manage snippets",
+    "quickCopy.collapseTitle": "Collapse Quick copy",
+    "quickCopy.expandTitle": "Expand Quick copy",
+    "quickCopy.labelPlaceholder": "Label (e.g. Support line)",
+    "quickCopy.valuePlaceholder": "Value to copy",
+    "quickCopy.empty": "No quick-copy snippets yet. Click the pencil to add one.",
+    "quickCopy.dragTitle": "Drag to reorder",
+    "quickCopy.scopeAllTitle": "All tabs — click to make this tab only",
+    "quickCopy.scopeTabTitle": "This tab only — click to make it All tabs",
+    "quickCopy.deleteTitle": "Delete snippet",
+
+    "highlights.heading": "Saved from pages",
+    "highlights.aboutAria": "About Saved from pages",
+    "highlights.tooltip": 'Highlight text on any page, then click "Save to sidebar" to collect it here with a link back to the exact spot — quotes for research, evidence for a bug, policy language for support.',
+    "highlights.switchTitle": 'Show the "Save to sidebar" prompt on highlighted text — only while Sidebit is open',
+    "highlights.switchAria": "Show Save to sidebar prompt on highlighted text",
+    "highlights.clearAllTitle": "Delete all saved highlights for this note",
+    "highlights.collapseTitle": "Collapse Saved from pages",
+    "highlights.expandTitle": "Expand Saved from pages",
+    "highlights.empty": 'Highlight text on any page, then click "Save to sidebar" to collect it here for this note.',
+    "highlights.linkBtn": "Link",
+    "highlights.linkTitle": "Copy link to this highlight",
+    "highlights.confirmClearAllOne": 'Delete 1 saved highlight for "{name}"? This can\'t be undone.',
+    "highlights.confirmClearAllMany": 'Delete all {count} saved highlights for "{name}"? This can\'t be undone.',
+
+    "notes.heading": "Notes",
+    "notes.aboutAria": "About Notes",
+    "notes.tooltip": "Free-form notes for whatever you're focused on right now. Autosaves as you type — no save button needed.",
+    "notes.clearTitle": "Clear notes",
+    "notes.placeholder": "Notes for this one...",
+    "notes.saved": "Saved",
+    "notes.confirmClear": 'Clear all notes for "{name}"? This can\'t be undone.',
+    "notes.plainCounterOne": "1 word",
+    "notes.plainCounterMany": "{count} words",
+
+    "screenshots.heading": "Screenshots",
+    "screenshots.aboutAria": "About Screenshots",
+    "screenshots.tooltip": "Capture button grabs the visible tab. Or use your OS screenshot tool (Win+Shift+S / Cmd+Shift+4) and paste into Notes — it's moved here automatically instead of pasting as text.",
+    "screenshots.pasteHint": "Paste ↑ or →",
+    "screenshots.capture": "Capture",
+    "screenshots.selectTitle": "Select screenshots",
+    "screenshots.select": "Select",
+    "screenshots.selectAll": "Select all",
+    "screenshots.deselectAll": "Deselect all",
+    "screenshots.selectedCountOne": "1 selected",
+    "screenshots.selectedCountMany": "{count} selected",
+    "screenshots.downloadSelectedTitle": "Download selected",
+    "screenshots.deleteSelectedTitle": "Delete selected",
+    "screenshots.empty": "No screenshots yet for this note.",
+    "screenshots.copyImageTitle": "Copy image",
+    "screenshots.deleteImageTitle": "Delete screenshot",
+    "screenshots.couldntCopy": "Couldn't copy",
+    "screenshots.confirmDeleteOne": "Delete this screenshot? This can't be undone.",
+    "screenshots.confirmDeleteSelectedOne": "Delete 1 screenshot? This can't be undone.",
+    "screenshots.confirmDeleteSelectedMany": "Delete {count} screenshots? This can't be undone.",
+    "screenshots.captureError": "Couldn't capture a screenshot of this page.",
+    "screenshots.pasteError": "Couldn't add that pasted image.",
+    "screenshots.readError": "Couldn't read that image.",
+
+    "lightbox.heading": "Screenshot",
+    "lightbox.previewAlt": "Screenshot preview",
+    "lightbox.download": "Download",
+    "lightbox.downloadError": "Download didn't start.",
+    "lightbox.copyError": "Couldn't copy the image.",
+
+    "trash.typeTab": "Note tab",
+    "trash.typeHighlight": "Highlight",
+    "trash.typeSnippet": "Snippet",
+    "trash.typeScreenshot": "Screenshot",
+    "trash.typeNotes": "Notes",
+    "trash.restore": "Restore",
+    "trash.empty": "Nothing deleted recently.",
+    "trash.emptyBtn": "Empty trash",
+    "trash.confirmEmptyOne": "Permanently remove 1 item from Recently Deleted? This can't be undone.",
+    "trash.confirmEmptyMany": "Permanently remove all {count} items from Recently Deleted? This can't be undone.",
+    "trash.screenshotTitle": 'From "{name}"',
+
+    "time.justNow": "just now",
+    "time.minAgo": "{m}m ago",
+    "time.hourAgo": "{h}h ago",
+    "time.dayAgo": "{d}d ago",
+
+    "settings.title": "Settings",
+    "settings.themeLabel": "Theme",
+    "settings.dark": "Dark",
+    "settings.light": "Light",
+    "settings.accentLabel": "Accent colors",
+    "settings.lightThemeGroup": "Light theme",
+    "settings.darkThemeGroup": "Dark theme",
+    "settings.bordersBoxes": "Borders & boxes",
+    "settings.buttonsLabel": "Buttons",
+    "settings.swatchDefault": "Default",
+    "settings.swatchBlue": "Blue",
+    "settings.swatchPurple": "Purple",
+    "settings.swatchGreen": "Green",
+    "settings.swatchRose": "Rose",
+    "settings.swatchPink": "Pink",
+    "settings.textSizeLabel": "Text size",
+    "settings.small": "Small",
+    "settings.medium": "Medium",
+    "settings.large": "Large",
+    "settings.fontLabel": "Font",
+    "settings.trashLabel": "Recently deleted",
+    "settings.backupLabel": "Backup",
+    "settings.exportData": "Export data",
+    "settings.importData": "Import data",
+    "settings.languageLabel": "Language",
+    "settings.englishOption": "English",
+    "settings.spanishOption": "Español",
+    "settings.backupDownloaded": "Backup downloaded.",
+    "settings.backupImported": "Backup imported.",
+    "settings.backupReadError": "Couldn't read that backup file.",
+    "settings.backupInvalidShape": "That file doesn't look like a Sidebit backup.",
+    "settings.confirmImportOne": "Import 1 note tab from this backup? This replaces everything currently in Sidebit — that can't be undone.",
+    "settings.confirmImportMany": "Import {count} note tabs from this backup? This replaces everything currently in Sidebit — that can't be undone.",
+
+    "search.placeholder": "Search notes, snippets, highlights...",
+    "search.groupTabs": "Note tabs",
+    "search.noMatches": 'No matches for "{query}".',
+    "search.moreResults": "+{count} more — refine your search",
+    "search.scopeHintOnly": "{name} only · ",
+    "search.aTabFallback": "a tab"
+  },
+
+  es: {
+    "common.undo": "Deshacer",
+    "common.add": "Añadir",
+    "common.copy": "Copiar",
+    "common.copied": "Copiado",
+    "common.label": "Etiqueta",
+    "common.value": "Valor",
+    "common.remove": "Quitar",
+    "common.cancel": "Cancelar",
+    "common.close": "Cerrar",
+    "common.delete": "Eliminar",
+    "common.allTabs": "Todas las pestañas",
+    "common.undoRestore": 'Deshacer: restaurar "{title}"',
+
+    "tabs.newNote": "+ Nota nueva",
+    "tabs.newNoteTitle": "Iniciar una nota nueva",
+    "tabs.closeTitle": "Cerrar esta nota",
+    "tabs.unpin": "Desanclar",
+    "tabs.pinToTop": "Anclar arriba",
+    "tabs.confirmClose": '¿Cerrar "{name}"? Puedes deshacerlo justo después, o restaurarla luego desde Configuración > Eliminado recientemente.',
+    "tabs.defaultName": "Nota {n}",
+    "tabs.restoredName": "Nota restaurada",
+    "tabs.untitled": "Nota",
+
+    "quickCopy.heading": "Copia rápida",
+    "quickCopy.aboutAria": "Acerca de Copia rápida",
+    "quickCopy.tooltip": "Guarda texto que pegas seguido — números de teléfono, plantillas de correo, respuestas predefinidas, avisos legales. Un clic para copiar, sin volver a escribir. El punto naranja significa \"Todas las pestañas\": ese fragmento aparece en todas partes. Sin punto, solo aparece en esta nota. En Administrar fragmentos, haz clic en el punto de un fragmento para cambiarlo entre los dos modos.",
+    "quickCopy.manageTitle": "Administrar fragmentos",
+    "quickCopy.collapseTitle": "Contraer Copia rápida",
+    "quickCopy.expandTitle": "Expandir Copia rápida",
+    "quickCopy.labelPlaceholder": "Etiqueta (p. ej. Línea de soporte)",
+    "quickCopy.valuePlaceholder": "Valor para copiar",
+    "quickCopy.empty": "Aún no hay fragmentos de copia rápida. Haz clic en el lápiz para añadir uno.",
+    "quickCopy.dragTitle": "Arrastra para reordenar",
+    "quickCopy.scopeAllTitle": "Todas las pestañas — haz clic para limitarlo a esta pestaña",
+    "quickCopy.scopeTabTitle": "Solo esta pestaña — haz clic para ponerlo en Todas las pestañas",
+    "quickCopy.deleteTitle": "Eliminar fragmento",
+
+    "highlights.heading": "Guardado de páginas",
+    "highlights.aboutAria": "Acerca de Guardado de páginas",
+    "highlights.tooltip": 'Resalta texto en cualquier página y haz clic en "Guardar en el panel" para reunirlo aquí con un enlace al lugar exacto — citas para investigación, evidencia de un error, texto de políticas para soporte.',
+    "highlights.switchTitle": 'Mostrar el aviso "Guardar en el panel" al resaltar texto — solo mientras Sidebit está abierto',
+    "highlights.switchAria": "Mostrar el aviso Guardar en el panel al resaltar texto",
+    "highlights.clearAllTitle": "Eliminar todo lo guardado de esta nota",
+    "highlights.collapseTitle": "Contraer Guardado de páginas",
+    "highlights.expandTitle": "Expandir Guardado de páginas",
+    "highlights.empty": 'Resalta texto en cualquier página y haz clic en "Guardar en el panel" para reunirlo aquí para esta nota.',
+    "highlights.linkBtn": "Enlace",
+    "highlights.linkTitle": "Copiar enlace a este resaltado",
+    "highlights.confirmClearAllOne": '¿Eliminar 1 elemento guardado de "{name}"? Esto no se puede deshacer.',
+    "highlights.confirmClearAllMany": '¿Eliminar los {count} elementos guardados de "{name}"? Esto no se puede deshacer.',
+
+    "notes.heading": "Notas",
+    "notes.aboutAria": "Acerca de Notas",
+    "notes.tooltip": "Notas libres para lo que estés trabajando ahora mismo. Se guardan solas mientras escribes — no hace falta botón de guardar.",
+    "notes.clearTitle": "Borrar notas",
+    "notes.placeholder": "Notas para esta nota...",
+    "notes.saved": "Guardado",
+    "notes.confirmClear": '¿Borrar todas las notas de "{name}"? Esto no se puede deshacer.',
+    "notes.plainCounterOne": "1 palabra",
+    "notes.plainCounterMany": "{count} palabras",
+
+    "screenshots.heading": "Capturas de pantalla",
+    "screenshots.aboutAria": "Acerca de Capturas de pantalla",
+    "screenshots.tooltip": "El botón Capturar toma la pestaña visible. O usa la herramienta de captura de tu sistema (Win+Mayús+S / Cmd+Mayús+4) y pégala en Notas — se mueve aquí automáticamente en vez de pegarse como texto.",
+    "screenshots.pasteHint": "Pega ↑ o →",
+    "screenshots.capture": "Capturar",
+    "screenshots.selectTitle": "Seleccionar capturas",
+    "screenshots.select": "Seleccionar",
+    "screenshots.selectAll": "Seleccionar todo",
+    "screenshots.deselectAll": "Deseleccionar todo",
+    "screenshots.selectedCountOne": "1 seleccionado",
+    "screenshots.selectedCountMany": "{count} seleccionados",
+    "screenshots.downloadSelectedTitle": "Descargar seleccionadas",
+    "screenshots.deleteSelectedTitle": "Eliminar seleccionadas",
+    "screenshots.empty": "Aún no hay capturas para esta nota.",
+    "screenshots.copyImageTitle": "Copiar imagen",
+    "screenshots.deleteImageTitle": "Eliminar captura",
+    "screenshots.couldntCopy": "No se pudo copiar",
+    "screenshots.confirmDeleteOne": "¿Eliminar esta captura? Esto no se puede deshacer.",
+    "screenshots.confirmDeleteSelectedOne": "¿Eliminar 1 captura? Esto no se puede deshacer.",
+    "screenshots.confirmDeleteSelectedMany": "¿Eliminar {count} capturas? Esto no se puede deshacer.",
+    "screenshots.captureError": "No se pudo capturar esta página.",
+    "screenshots.pasteError": "No se pudo añadir la imagen pegada.",
+    "screenshots.readError": "No se pudo leer esa imagen.",
+
+    "lightbox.heading": "Captura de pantalla",
+    "lightbox.previewAlt": "Vista previa de la captura",
+    "lightbox.download": "Descargar",
+    "lightbox.downloadError": "La descarga no comenzó.",
+    "lightbox.copyError": "No se pudo copiar la imagen.",
+
+    "trash.typeTab": "Pestaña de nota",
+    "trash.typeHighlight": "Resaltado",
+    "trash.typeSnippet": "Fragmento",
+    "trash.typeScreenshot": "Captura de pantalla",
+    "trash.typeNotes": "Notas",
+    "trash.restore": "Restaurar",
+    "trash.empty": "Nada eliminado recientemente.",
+    "trash.emptyBtn": "Vaciar papelera",
+    "trash.confirmEmptyOne": "¿Eliminar permanentemente 1 elemento de Eliminado recientemente? Esto no se puede deshacer.",
+    "trash.confirmEmptyMany": "¿Eliminar permanentemente los {count} elementos de Eliminado recientemente? Esto no se puede deshacer.",
+    "trash.screenshotTitle": 'De "{name}"',
+
+    "time.justNow": "justo ahora",
+    "time.minAgo": "hace {m} min",
+    "time.hourAgo": "hace {h} h",
+    "time.dayAgo": "hace {d} d",
+
+    "settings.title": "Configuración",
+    "settings.themeLabel": "Tema",
+    "settings.dark": "Oscuro",
+    "settings.light": "Claro",
+    "settings.accentLabel": "Colores de acento",
+    "settings.lightThemeGroup": "Tema claro",
+    "settings.darkThemeGroup": "Tema oscuro",
+    "settings.bordersBoxes": "Bordes y cuadros",
+    "settings.buttonsLabel": "Botones",
+    "settings.swatchDefault": "Predeterminado",
+    "settings.swatchBlue": "Azul",
+    "settings.swatchPurple": "Morado",
+    "settings.swatchGreen": "Verde",
+    "settings.swatchRose": "Rosa",
+    "settings.swatchPink": "Rosado",
+    "settings.textSizeLabel": "Tamaño de texto",
+    "settings.small": "Pequeño",
+    "settings.medium": "Mediano",
+    "settings.large": "Grande",
+    "settings.fontLabel": "Fuente",
+    "settings.trashLabel": "Eliminado recientemente",
+    "settings.backupLabel": "Copia de seguridad",
+    "settings.exportData": "Exportar datos",
+    "settings.importData": "Importar datos",
+    "settings.languageLabel": "Idioma",
+    "settings.englishOption": "English",
+    "settings.spanishOption": "Español",
+    "settings.backupDownloaded": "Copia de seguridad descargada.",
+    "settings.backupImported": "Copia de seguridad importada.",
+    "settings.backupReadError": "No se pudo leer ese archivo de copia de seguridad.",
+    "settings.backupInvalidShape": "Ese archivo no parece ser una copia de seguridad de Sidebit.",
+    "settings.confirmImportOne": "¿Importar 1 pestaña de nota desde esta copia de seguridad? Esto reemplaza todo lo que hay actualmente en Sidebit — no se puede deshacer.",
+    "settings.confirmImportMany": "¿Importar {count} pestañas de notas desde esta copia de seguridad? Esto reemplaza todo lo que hay actualmente en Sidebit — no se puede deshacer.",
+
+    "search.placeholder": "Buscar notas, fragmentos, resaltados...",
+    "search.groupTabs": "Pestañas de notas",
+    "search.noMatches": 'Sin resultados para "{query}".',
+    "search.moreResults": "+{count} más — afina tu búsqueda",
+    "search.scopeHintOnly": "Solo {name} · ",
+    "search.aTabFallback": "una pestaña"
+  }
+};
+
+function t(key, vars) {
+  const lang = (typeof state !== "undefined" && state.settings && state.settings.language) || "en";
+  const dict = LOCALES[lang] || LOCALES.en;
+  let str = dict[key] ?? LOCALES.en[key] ?? key;
+  if (vars) {
+    Object.keys(vars).forEach(k => {
+      str = str.split(`{${k}}`).join(vars[k]);
+    });
+  }
+  return str;
+}
+
+// Applies translations to every static element in sidepanel.html tagged
+// with a data-i18n* attribute. Dynamically-created elements (rendered in
+// sidepanel.js) call t() directly instead, since they're rebuilt on every
+// render anyway.
+function applyI18n() {
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    el.textContent = t(el.getAttribute("data-i18n"));
+  });
+  document.querySelectorAll("[data-i18n-title]").forEach(el => {
+    el.title = t(el.getAttribute("data-i18n-title"));
+  });
+  document.querySelectorAll("[data-i18n-placeholder]").forEach(el => {
+    el.placeholder = t(el.getAttribute("data-i18n-placeholder"));
+  });
+  document.querySelectorAll("[data-i18n-aria-label]").forEach(el => {
+    el.setAttribute("aria-label", t(el.getAttribute("data-i18n-aria-label")));
+  });
+  document.querySelectorAll("[data-i18n-alt]").forEach(el => {
+    el.alt = t(el.getAttribute("data-i18n-alt"));
+  });
+}

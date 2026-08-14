@@ -9,6 +9,7 @@ const DEFAULT_SETTINGS = {
   theme: "light",
   font: "verdana",
   textSize: "medium",
+  language: "en",
   quickCopyCollapsed: false,
   savedPagesCollapsed: false,
   highlightPromptEnabled: true,
@@ -26,18 +27,18 @@ const DEFAULT_SETTINGS = {
 // "borders & boxes" vs. "buttons".
 const ACCENT_SWATCHES = {
   light: [
-    { color: "#565c68", name: "Default" },
-    { color: "#2563eb", name: "Blue" },
-    { color: "#7c3aed", name: "Purple" },
-    { color: "#047857", name: "Green" },
-    { color: "#be185d", name: "Rose" }
+    { color: "#565c68", nameKey: "settings.swatchDefault" },
+    { color: "#2563eb", nameKey: "settings.swatchBlue" },
+    { color: "#7c3aed", nameKey: "settings.swatchPurple" },
+    { color: "#047857", nameKey: "settings.swatchGreen" },
+    { color: "#be185d", nameKey: "settings.swatchRose" }
   ],
   dark: [
-    { color: "#9198a1", name: "Default" },
-    { color: "#58a6ff", name: "Blue" },
-    { color: "#bc8cff", name: "Purple" },
-    { color: "#56d364", name: "Green" },
-    { color: "#f778ba", name: "Pink" }
+    { color: "#9198a1", nameKey: "settings.swatchDefault" },
+    { color: "#58a6ff", nameKey: "settings.swatchBlue" },
+    { color: "#bc8cff", nameKey: "settings.swatchPurple" },
+    { color: "#56d364", nameKey: "settings.swatchGreen" },
+    { color: "#f778ba", nameKey: "settings.swatchPink" }
   ]
 };
 
@@ -95,6 +96,7 @@ const el = {
   settingsBtn: document.getElementById("settingsBtn"),
   settingsModal: document.getElementById("settingsModal"),
   closeSettingsBtn: document.getElementById("closeSettingsBtn"),
+  languageChoices: document.getElementById("languageChoices"),
   themeChoices: document.getElementById("themeChoices"),
   lightLineSwatches: document.getElementById("lightLineSwatches"),
   lightButtonSwatches: document.getElementById("lightButtonSwatches"),
@@ -150,10 +152,26 @@ async function loadState() {
   state.snippets = data.snippets || [];
   state.settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings || {});
   state.trash = data.trash || [];
+  applyLanguage(state.settings.language);
   renderAll();
   applyTheme(state.settings.theme);
   applyFont(state.settings.font);
   applyTextScale(state.settings.textSize);
+}
+
+// Applies the active language everywhere: static markup via applyI18n(),
+// the accent-swatch titles built once at startup (buildSwatchRow doesn't
+// re-run on every render, so they need a separate refresh here), and
+// everything else by re-rendering, since dynamically-created elements call
+// t() directly at creation time anyway.
+function applyLanguage(lang) {
+  document.documentElement.lang = lang === "es" ? "es" : "en";
+  applyI18n();
+  document.querySelectorAll(".swatch-btn[data-name-key]").forEach(btn => {
+    const label = t(btn.dataset.nameKey);
+    btn.title = label;
+    btn.setAttribute("aria-label", label);
+  });
 }
 
 // Re-render if data changes elsewhere (a highlight saved from a page,
@@ -166,6 +184,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.trash) state.trash = changes.trash.newValue || [];
   if (changes.settings) {
     state.settings = Object.assign({ ...DEFAULT_SETTINGS }, changes.settings.newValue || {});
+    applyLanguage(state.settings.language);
     applyTheme(state.settings.theme);
     applyFont(state.settings.font);
     applyTextScale(state.settings.textSize);
@@ -192,17 +211,23 @@ async function trashItem(entry) {
 }
 
 function trashTypeLabel(type) {
-  return { tab: "Note tab", highlight: "Highlight", snippet: "Snippet", screenshot: "Screenshot", note: "Notes" }[type] || type;
+  return {
+    tab: t("trash.typeTab"),
+    highlight: t("trash.typeHighlight"),
+    snippet: t("trash.typeSnippet"),
+    screenshot: t("trash.typeScreenshot"),
+    note: t("trash.typeNotes")
+  }[type] || type;
 }
 
 function relativeTime(ms) {
   const diff = Math.max(0, Date.now() - ms);
   const min = Math.round(diff / 60000);
-  if (min < 1) return "just now";
-  if (min < 60) return `${min}m ago`;
+  if (min < 1) return t("time.justNow");
+  if (min < 60) return t("time.minAgo", { m: min });
   const hr = Math.round(min / 60);
-  if (hr < 24) return `${hr}h ago`;
-  return `${Math.round(hr / 24)}d ago`;
+  if (hr < 24) return t("time.hourAgo", { h: hr });
+  return t("time.dayAgo", { d: Math.round(hr / 24) });
 }
 
 function renderTrash() {
@@ -212,7 +237,7 @@ function renderTrash() {
   if (state.trash.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state trash-empty";
-    empty.textContent = "Nothing deleted recently.";
+    empty.textContent = t("trash.empty");
     el.trashList.appendChild(empty);
     return;
   }
@@ -238,7 +263,7 @@ function renderTrash() {
 
     const restoreBtn = document.createElement("button");
     restoreBtn.className = "small-btn";
-    restoreBtn.textContent = "Restore";
+    restoreBtn.textContent = t("trash.restore");
     restoreBtn.addEventListener("click", () => restoreTrashEntry(entry.id));
 
     row.appendChild(tag);
@@ -257,14 +282,14 @@ function findLastTrash(type, filterFn) {
 function wireUndoButton(btn, type, filterFn) {
   const entry = findLastTrash(type, filterFn);
   btn.classList.toggle("hidden", !entry);
-  if (entry) btn.title = `Undo: restore "${trashEntryTitle(entry)}"`;
+  if (entry) btn.title = t("common.undoRestore", { title: trashEntryTitle(entry) });
 }
 
 function trashEntryTitle(entry) {
   if (entry.type === "tab") return entry.tab.name;
   if (entry.type === "highlight") return entry.highlight.text.slice(0, 60);
   if (entry.type === "snippet") return entry.snippet.label;
-  if (entry.type === "screenshot") return `From "${entry.tabName}"`;
+  if (entry.type === "screenshot") return t("trash.screenshotTitle", { name: entry.tabName });
   if (entry.type === "note") return entry.notes.slice(0, 60);
   return "";
 }
@@ -274,7 +299,7 @@ function trashEntryTitle(entry) {
 function resolveOwningTab(tabs, entry) {
   let target = tabs.find(t => t.id === entry.tabId);
   if (target) return { tabs, tab: target };
-  const fresh = { id: entry.tabId, name: entry.tabName || "Restored note", notes: "", highlights: [], screenshots: [], pinned: false };
+  const fresh = { id: entry.tabId, name: entry.tabName || t("tabs.restoredName"), notes: "", highlights: [], screenshots: [], pinned: false };
   return { tabs: [...tabs, fresh], tab: fresh };
 }
 
@@ -331,7 +356,11 @@ async function restoreTrashEntry(entryId) {
 
 el.emptyTrashBtn.addEventListener("click", async () => {
   if (!state.trash.length) return;
-  const ok = confirm(`Permanently remove all ${state.trash.length} item${state.trash.length === 1 ? "" : "s"} from Recently Deleted? This can't be undone.`);
+  const ok = confirm(
+    state.trash.length === 1
+      ? t("trash.confirmEmptyOne")
+      : t("trash.confirmEmptyMany", { count: state.trash.length })
+  );
   if (!ok) return;
   await persist({ trash: [] });
   renderTrash();
@@ -386,6 +415,11 @@ function applyTextScale(sizeKey) {
 }
 
 function renderSettingsUI() {
+  const language = state.settings.language || "en";
+  [...el.languageChoices.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.languageChoice === language);
+  });
+
   const theme = state.settings.theme || "light";
   [...el.themeChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.themeChoice === theme);
@@ -416,13 +450,14 @@ function syncSwatchRow(container, selectedColor) {
 // Built once from ACCENT_SWATCHES rather than hand-written in the HTML, so
 // the colors only need to be defined in one place.
 function buildSwatchRow(container, themeKey, settingsKey) {
-  ACCENT_SWATCHES[themeKey].forEach(({ color, name }) => {
+  ACCENT_SWATCHES[themeKey].forEach(({ color, nameKey }) => {
     const btn = document.createElement("button");
     btn.className = "swatch-btn";
     btn.type = "button";
     btn.dataset.color = color;
-    btn.title = name;
-    btn.setAttribute("aria-label", name);
+    btn.dataset.nameKey = nameKey;
+    btn.title = t(nameKey);
+    btn.setAttribute("aria-label", t(nameKey));
     btn.style.setProperty("--swatch-color", color);
     container.appendChild(btn);
   });
@@ -446,6 +481,16 @@ el.settingsBtn.addEventListener("click", () => el.settingsModal.classList.remove
 el.closeSettingsBtn.addEventListener("click", () => el.settingsModal.classList.add("hidden"));
 el.settingsModal.addEventListener("click", e => {
   if (e.target === el.settingsModal) el.settingsModal.classList.add("hidden");
+});
+
+el.languageChoices.addEventListener("click", async e => {
+  const btn = e.target.closest(".choice-btn");
+  if (!btn) return;
+  const language = btn.dataset.languageChoice;
+  const settings = { ...state.settings, language };
+  await persist({ settings });
+  applyLanguage(language);
+  renderAll();
 });
 
 el.themeChoices.addEventListener("click", async e => {
@@ -499,7 +544,7 @@ el.exportDataBtn.addEventListener("click", () => {
   a.remove();
   URL.revokeObjectURL(url);
   el.backupStatus.classList.remove("error");
-  el.backupStatus.textContent = "Backup downloaded.";
+  el.backupStatus.textContent = t("settings.backupDownloaded");
   setTimeout(() => { el.backupStatus.textContent = ""; }, 1800);
 });
 
@@ -518,21 +563,23 @@ el.importDataInput.addEventListener("change", async () => {
     const text = await file.text();
     const data = JSON.parse(text);
     if (!isValidBackupShape(data)) {
-      throw new Error("That file doesn't look like a Sidebit backup.");
+      throw new Error(t("settings.backupInvalidShape"));
     }
     const tabCount = data.tabs.length;
     const ok = confirm(
-      `Import ${tabCount} note tab${tabCount === 1 ? "" : "s"} from this backup? ` +
-      `This replaces everything currently in Sidebit — that can't be undone.`
+      tabCount === 1
+        ? t("settings.confirmImportOne")
+        : t("settings.confirmImportMany", { count: tabCount })
     );
     if (!ok) {
       el.backupStatus.textContent = "";
       return;
     }
 
+    const untitledFallback = t("tabs.untitled");
     const tabs = data.tabs.map(t => ({
       id: t.id,
-      name: t.name || "Note",
+      name: t.name || untitledFallback,
       notes: typeof t.notes === "string" ? t.notes : "",
       highlights: Array.isArray(t.highlights) ? t.highlights : [],
       screenshots: Array.isArray(t.screenshots) ? t.screenshots : [],
@@ -544,15 +591,16 @@ el.importDataInput.addEventListener("change", async () => {
     const trash = Array.isArray(data.trash) ? data.trash : [];
 
     await persist({ tabs, activeTabId, snippets, settings, trash });
+    applyLanguage(settings.language);
     applyTheme(settings.theme);
     applyFont(settings.font);
     applyTextScale(settings.textSize);
     renderAll();
 
-    el.backupStatus.textContent = "Backup imported.";
+    el.backupStatus.textContent = t("settings.backupImported");
     setTimeout(() => { el.backupStatus.textContent = ""; }, 1800);
   } catch (err) {
-    el.backupStatus.textContent = err && err.message ? err.message : "Couldn't read that backup file.";
+    el.backupStatus.textContent = err && err.message ? err.message : t("settings.backupReadError");
     el.backupStatus.classList.add("error");
   } finally {
     el.importDataInput.value = "";
@@ -565,10 +613,10 @@ el.importDataInput.addEventListener("change", async () => {
 function readScreenshotFile(file, maxDimension) {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onerror = () => reject(new Error("Couldn't read that image."));
+    reader.onerror = () => reject(new Error(t("screenshots.readError")));
     reader.onload = () => {
       const img = new Image();
-      img.onerror = () => reject(new Error("Couldn't read that image."));
+      img.onerror = () => reject(new Error(t("screenshots.readError")));
       img.onload = () => {
         if (img.width <= maxDimension && img.height <= maxDimension) {
           resolve(reader.result);
@@ -609,7 +657,7 @@ function renderTabs() {
 
     const pinBtn = document.createElement("button");
     pinBtn.className = "pin-btn" + (tab.pinned ? " pinned" : "");
-    pinBtn.title = tab.pinned ? "Unpin" : "Pin to top";
+    pinBtn.title = tab.pinned ? t("tabs.unpin") : t("tabs.pinToTop");
     pinBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="17" x2="12" y2="22"></line><path d="M5 17h14v-1.76a2 2 0 0 0-1.11-1.79l-1.78-.9A2 2 0 0 1 15 10.76V6h1a1 1 0 0 0 0-2H8a1 1 0 0 0 0 2h1v4.76a2 2 0 0 1-1.11 1.79l-1.78.9A2 2 0 0 0 5 15.24Z"></path></svg>`;
     pinBtn.addEventListener("click", async e => {
       e.stopPropagation();
@@ -628,11 +676,11 @@ function renderTabs() {
     const closeX = document.createElement("span");
     closeX.className = "close-x";
     closeX.textContent = "✕";
-    closeX.title = "Close this note";
+    closeX.title = t("tabs.closeTitle");
     closeX.addEventListener("click", async e => {
       e.stopPropagation();
       if (!isTabEmpty(tab)) {
-        const ok = confirm(`Close "${tab.name}"? You can undo this right after, or restore it later from Settings > Recently deleted.`);
+        const ok = confirm(t("tabs.confirmClose", { name: tab.name }));
         if (!ok) return;
       }
       closeTab(tab.id);
@@ -719,7 +767,7 @@ async function closeTab(tabId) {
   let remaining = state.tabs.filter(t => t.id !== tabId);
   let newActive = state.activeTabId;
   if (remaining.length === 0) {
-    const fresh = { id: uid(), name: "Note 1", notes: "", highlights: [], screenshots: [], pinned: false };
+    const fresh = { id: uid(), name: t("tabs.defaultName", { n: 1 }), notes: "", highlights: [], screenshots: [], pinned: false };
     remaining = [fresh];
     newActive = fresh.id;
   } else if (tabId === state.activeTabId) {
@@ -733,7 +781,7 @@ async function closeTab(tabId) {
 
 el.newTabBtn.addEventListener("click", async () => {
   const n = state.tabs.length + 1;
-  const fresh = { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [], pinned: false };
+  const fresh = { id: uid(), name: t("tabs.defaultName", { n }), notes: "", highlights: [], screenshots: [], pinned: false };
   const tabs = [...state.tabs, fresh];
   await persist({ tabs, activeTabId: fresh.id });
   renderAll();
@@ -744,7 +792,7 @@ el.newTabBtn.addEventListener("click", async () => {
 
 function flashCopied(btn) {
   const original = btn.textContent;
-  btn.textContent = "Copied";
+  btn.textContent = t("common.copied");
   btn.classList.add("copied");
   setTimeout(() => {
     btn.textContent = original;
@@ -766,7 +814,7 @@ function renderSnippets() {
   const collapsed = !!state.settings.quickCopyCollapsed;
   el.snippetsBody.classList.toggle("hidden", collapsed);
   el.toggleCollapseSnippets.classList.toggle("collapsed", collapsed);
-  el.toggleCollapseSnippets.title = collapsed ? "Expand Quick copy" : "Collapse Quick copy";
+  el.toggleCollapseSnippets.title = collapsed ? t("quickCopy.expandTitle") : t("quickCopy.collapseTitle");
 
   el.snippetsList.innerHTML = "";
 
@@ -778,7 +826,7 @@ function renderSnippets() {
   if (ordered.length === 0 && !editingSnippets) {
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "No quick-copy snippets yet. Click the pencil to add one.";
+    empty.textContent = t("quickCopy.empty");
     el.snippetsList.appendChild(empty);
   }
 
@@ -791,7 +839,7 @@ function renderSnippets() {
     if (editingSnippets) {
       const handle = document.createElement("span");
       handle.className = "drag-handle";
-      handle.title = "Drag to reorder";
+      handle.title = t("quickCopy.dragTitle");
       handle.draggable = true;
       handle.innerHTML = `<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="9" cy="6" r="1.5"/><circle cx="15" cy="6" r="1.5"/><circle cx="9" cy="12" r="1.5"/><circle cx="15" cy="12" r="1.5"/><circle cx="9" cy="18" r="1.5"/><circle cx="15" cy="18" r="1.5"/></svg>`;
 
@@ -840,8 +888,8 @@ function renderSnippets() {
       const scopeToggle = document.createElement("button");
       scopeToggle.className = "scope-toggle-btn" + (isSnippetGlobal(snippet) ? " scope-all" : "");
       scopeToggle.title = isSnippetGlobal(snippet)
-        ? "All tabs — click to make this tab only"
-        : "This tab only — click to make it All tabs";
+        ? t("quickCopy.scopeAllTitle")
+        : t("quickCopy.scopeTabTitle");
       scopeToggle.addEventListener("click", async () => {
         const updated = state.snippets.map(s => {
           if (s.id !== snippet.id) return s;
@@ -857,13 +905,13 @@ function renderSnippets() {
       const labelInput = document.createElement("input");
       labelInput.className = "snippet-label-input";
       labelInput.value = snippet.label;
-      labelInput.placeholder = "Label";
+      labelInput.placeholder = t("common.label");
 
       const valueInput = document.createElement("textarea");
       valueInput.className = "snippet-value-input";
       valueInput.rows = 1;
       valueInput.value = snippet.value;
-      valueInput.placeholder = "Value";
+      valueInput.placeholder = t("common.value");
       const autoGrowValue = () => {
         valueInput.style.height = "auto";
         valueInput.style.height = valueInput.scrollHeight + "px";
@@ -884,7 +932,7 @@ function renderSnippets() {
 
       const del = document.createElement("button");
       del.className = "delete-btn";
-      del.title = "Delete snippet";
+      del.title = t("quickCopy.deleteTitle");
       del.innerHTML = trashIcon();
       del.addEventListener("click", async () => {
         const sIndex = state.snippets.findIndex(s => s.id === snippet.id);
@@ -912,7 +960,7 @@ function renderSnippets() {
 
       const copyBtn = document.createElement("button");
       copyBtn.className = "copy-btn";
-      copyBtn.textContent = "Copy";
+      copyBtn.textContent = t("common.copy");
       copyBtn.addEventListener("click", async () => {
         await navigator.clipboard.writeText(snippet.value);
         flashCopied(copyBtn);
@@ -993,7 +1041,7 @@ function renderHighlights() {
   const collapsed = !!state.settings.savedPagesCollapsed;
   el.highlightsBody.classList.toggle("hidden", collapsed);
   el.toggleCollapseHighlights.classList.toggle("collapsed", collapsed);
-  el.toggleCollapseHighlights.title = collapsed ? "Expand Saved from pages" : "Collapse Saved from pages";
+  el.toggleCollapseHighlights.title = collapsed ? t("highlights.expandTitle") : t("highlights.collapseTitle");
 
   el.highlightsList.innerHTML = "";
   const tab = activeTab();
@@ -1005,7 +1053,7 @@ function renderHighlights() {
     el.highlightsCounter.textContent = "";
     const empty = document.createElement("div");
     empty.className = "empty-state";
-    empty.textContent = "Highlight text on any page, then click \u201cSave to sidebar\u201d to collect it here for this note.";
+    empty.textContent = t("highlights.empty");
     el.highlightsList.appendChild(empty);
     return;
   }
@@ -1042,7 +1090,7 @@ function renderHighlights() {
 
     const copyBtn = document.createElement("button");
     copyBtn.className = "copy-btn";
-    copyBtn.textContent = "Copy";
+    copyBtn.textContent = t("common.copy");
     copyBtn.addEventListener("click", async () => {
       await navigator.clipboard.writeText(h.text);
       flashCopied(copyBtn);
@@ -1052,8 +1100,8 @@ function renderHighlights() {
     if (h.url) {
       const copyLinkBtn = document.createElement("button");
       copyLinkBtn.className = "copy-btn";
-      copyLinkBtn.textContent = "Link";
-      copyLinkBtn.title = "Copy link to this highlight";
+      copyLinkBtn.textContent = t("highlights.linkBtn");
+      copyLinkBtn.title = t("highlights.linkTitle");
       copyLinkBtn.addEventListener("click", async () => {
         await navigator.clipboard.writeText(h.url);
         flashCopied(copyLinkBtn);
@@ -1063,7 +1111,7 @@ function renderHighlights() {
 
     const del = document.createElement("button");
     del.className = "delete-btn";
-    del.title = "Remove";
+    del.title = t("common.remove");
     del.innerHTML = trashIcon();
     del.addEventListener("click", async () => {
       const hIndex = tab.highlights.findIndex(x => x.id === h.id);
@@ -1089,7 +1137,11 @@ el.clearHighlightsBtn.addEventListener("click", async () => {
   const tab = activeTab();
   if (!tab || !(tab.highlights || []).length) return;
   const count = tab.highlights.length;
-  const ok = confirm(`Delete all ${count} saved highlight${count === 1 ? "" : "s"} for "${tab.name}"? This can't be undone.`);
+  const ok = confirm(
+    count === 1
+      ? t("highlights.confirmClearAllOne", { name: tab.name })
+      : t("highlights.confirmClearAllMany", { count, name: tab.name })
+  );
   if (!ok) return;
   const removed = [...tab.highlights];
   const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, highlights: [] } : t));
@@ -1128,6 +1180,13 @@ function updateNotesCounter() {
     el.notesCounter.textContent = "";
     return;
   }
+  // Quips are English-language jokes that don't translate — in any
+  // non-English UI, show a plain word count instead of picking a quip.
+  if ((state.settings.language || "en") !== "en") {
+    const words = countWords(text);
+    el.notesCounter.textContent = words === 1 ? t("notes.plainCounterOne") : t("notes.plainCounterMany", { count: words });
+    return;
+  }
   el.notesCounter.textContent = getNotesQuipPicker(tab.id).get(text.length);
 }
 
@@ -1145,7 +1204,7 @@ function renderNotes() {
 el.clearNotesBtn.addEventListener("click", async () => {
   const tab = activeTab();
   if (!tab || !(tab.notes || "").trim()) return;
-  const ok = confirm(`Clear all notes for "${tab.name}"? This can't be undone.`);
+  const ok = confirm(t("notes.confirmClear", { name: tab.name }));
   if (!ok) return;
   const removedNotes = tab.notes;
   const updatedTabs = state.tabs.map(t => (t.id === tab.id ? { ...t, notes: "" } : t));
@@ -1166,7 +1225,7 @@ el.notesArea.addEventListener("input", () => {
       t.id === tab.id ? { ...t, notes: el.notesArea.value } : t
     );
     await persist({ tabs: updatedTabs });
-    el.saveIndicator.textContent = "Saved";
+    el.saveIndicator.textContent = t("notes.saved");
     el.saveIndicator.classList.add("visible");
     setTimeout(() => el.saveIndicator.classList.remove("visible"), 900);
   }, 400);
@@ -1202,7 +1261,7 @@ el.notesArea.addEventListener("paste", async e => {
       setTimeout(() => newThumb.classList.remove("just-added"), 1200);
     }
   } catch (err) {
-    alert(err && err.message ? err.message : "Couldn't add that pasted image.");
+    alert(err && err.message ? err.message : t("screenshots.pasteError"));
   }
 });
 
@@ -1211,7 +1270,7 @@ el.notesArea.addEventListener("paste", async e => {
 function flashIconCopied(btn) {
   const original = btn.title;
   btn.classList.add("copied");
-  btn.title = "Copied";
+  btn.title = t("common.copied");
   setTimeout(() => {
     btn.classList.remove("copied");
     btn.title = original;
@@ -1225,7 +1284,7 @@ async function copyScreenshotToClipboard(shot, btn) {
     await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
     flashIconCopied(btn);
   } catch {
-    btn.title = "Couldn't copy";
+    btn.title = t("screenshots.couldntCopy");
   }
 }
 
@@ -1256,11 +1315,11 @@ function renderScreenshots() {
   el.screenshotsStrip.classList.toggle("selecting", screenshotSelectionMode);
 
   const selectedCount = shots.filter(s => selectedScreenshotIds.has(s.id)).length;
-  el.screenshotSelectionCount.textContent = `${selectedCount} selected`;
+  el.screenshotSelectionCount.textContent = selectedCount === 1 ? t("screenshots.selectedCountOne") : t("screenshots.selectedCountMany", { count: selectedCount });
   el.downloadSelectedScreenshotsBtn.disabled = selectedCount === 0;
   el.deleteSelectedScreenshotsBtn.disabled = selectedCount === 0;
   const allSelected = shots.length > 0 && selectedCount === shots.length;
-  el.selectAllScreenshotsBtn.title = allSelected ? "Deselect all" : "Select all";
+  el.selectAllScreenshotsBtn.title = allSelected ? t("screenshots.deselectAll") : t("screenshots.selectAll");
   el.selectAllScreenshotsBtn.classList.toggle("all-selected", allSelected);
 
   el.screenshotsStrip.innerHTML = "";
@@ -1268,7 +1327,7 @@ function renderScreenshots() {
   if (shots.length === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state screenshots-empty";
-    empty.textContent = "No screenshots yet for this note.";
+    empty.textContent = t("screenshots.empty");
     el.screenshotsStrip.appendChild(empty);
     return;
   }
@@ -1290,8 +1349,8 @@ function renderScreenshots() {
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
     copyBtn.className = "thumb-copy-btn";
-    copyBtn.title = "Copy image";
-    copyBtn.setAttribute("aria-label", "Copy image");
+    copyBtn.title = t("screenshots.copyImageTitle");
+    copyBtn.setAttribute("aria-label", t("screenshots.copyImageTitle"));
     copyBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>`;
     copyBtn.addEventListener("click", e => {
       e.stopPropagation();
@@ -1302,12 +1361,12 @@ function renderScreenshots() {
     const deleteBtn = document.createElement("button");
     deleteBtn.type = "button";
     deleteBtn.className = "thumb-delete-btn";
-    deleteBtn.title = "Delete screenshot";
-    deleteBtn.setAttribute("aria-label", "Delete screenshot");
+    deleteBtn.title = t("screenshots.deleteImageTitle");
+    deleteBtn.setAttribute("aria-label", t("screenshots.deleteImageTitle"));
     deleteBtn.innerHTML = `<svg viewBox="0 0 24 24" width="11" height="11" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"></path><path d="M10 11v6"></path><path d="M14 11v6"></path><path d="M9 6V4a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"></path></svg>`;
     deleteBtn.addEventListener("click", async e => {
       e.stopPropagation();
-      const ok = confirm("Delete this screenshot? This can't be undone.");
+      const ok = confirm(t("screenshots.confirmDeleteOne"));
       if (!ok) return;
       const index = (tab.screenshots || []).findIndex(s => s.id === shot.id);
       const updatedTabs = state.tabs.map(t =>
@@ -1359,7 +1418,11 @@ el.deleteSelectedScreenshotsBtn.addEventListener("click", async () => {
   if (!tab) return;
   const toDelete = (tab.screenshots || []).filter(s => selectedScreenshotIds.has(s.id));
   if (!toDelete.length) return;
-  const ok = confirm(`Delete ${toDelete.length} screenshot${toDelete.length === 1 ? "" : "s"}? This can't be undone.`);
+  const ok = confirm(
+    toDelete.length === 1
+      ? t("screenshots.confirmDeleteSelectedOne")
+      : t("screenshots.confirmDeleteSelectedMany", { count: toDelete.length })
+  );
   if (!ok) return;
 
   const updatedTabs = state.tabs.map(t =>
@@ -1414,7 +1477,7 @@ el.captureBtn.addEventListener("click", async () => {
   } catch (err) {
     // Fails on chrome:// pages, the Web Store, other extension pages, or if
     // called more than ~2x/second (Chrome's built-in rate limit).
-    alert(err && err.message ? err.message : "Couldn't capture a screenshot of this page.");
+    alert(err && err.message ? err.message : t("screenshots.captureError"));
   } finally {
     el.captureBtn.disabled = false;
   }
@@ -1450,7 +1513,7 @@ el.lightboxDownloadBtn.addEventListener("click", async () => {
     await chrome.downloads.download({ url, filename: `sidebit-screenshot-${stamp}.png`, saveAs: true });
     setTimeout(() => URL.revokeObjectURL(url), 30000);
   } catch (err) {
-    el.lightboxStatus.textContent = "Download didn't start.";
+    el.lightboxStatus.textContent = t("lightbox.downloadError");
     el.lightboxStatus.classList.add("error");
   }
 });
@@ -1463,14 +1526,14 @@ el.lightboxCopyBtn.addEventListener("click", async () => {
     await navigator.clipboard.write([new ClipboardItem({ [blob.type]: blob })]);
     flashCopied(el.lightboxCopyBtn);
   } catch (err) {
-    el.lightboxStatus.textContent = "Couldn't copy the image.";
+    el.lightboxStatus.textContent = t("lightbox.copyError");
     el.lightboxStatus.classList.add("error");
   }
 });
 
 el.lightboxDeleteBtn.addEventListener("click", async () => {
   if (!currentLightboxShot) return;
-  const ok = confirm("Delete this screenshot? This can't be undone.");
+  const ok = confirm(t("screenshots.confirmDeleteOne"));
   if (!ok) return;
   const tab = activeTab();
   if (!tab) return;
@@ -1624,7 +1687,7 @@ function renderSearchResults(rawQuery) {
   if (total === 0) {
     const empty = document.createElement("div");
     empty.className = "empty-state search-empty";
-    empty.textContent = `No matches for "${q}".`;
+    empty.textContent = t("search.noMatches", { query: q });
     el.searchResults.appendChild(empty);
     el.searchResults.classList.remove("hidden");
     return;
@@ -1640,12 +1703,12 @@ function renderSearchResults(rawQuery) {
     if (items.length > SEARCH_MAX_PER_GROUP) {
       const more = document.createElement("div");
       more.className = "search-more";
-      more.textContent = `+${items.length - SEARCH_MAX_PER_GROUP} more — refine your search`;
+      more.textContent = t("search.moreResults", { count: items.length - SEARCH_MAX_PER_GROUP });
       el.searchResults.appendChild(more);
     }
   }
 
-  addGroup("Note tabs", results.tabs, ({ tab, matchedNotes }) => {
+  addGroup(t("search.groupTabs"), results.tabs, ({ tab, matchedNotes }) => {
     const row = document.createElement("button");
     row.className = "search-result";
     const title = document.createElement("div");
@@ -1653,14 +1716,14 @@ function renderSearchResults(rawQuery) {
     title.appendChild(highlightMatch(tab.name, q));
     const sub = document.createElement("div");
     sub.className = "search-result-sub";
-    sub.textContent = matchedNotes ? excerpt(tab.notes, q, 40) : "Note tab";
+    sub.textContent = matchedNotes ? excerpt(tab.notes, q, 40) : t("trash.typeTab");
     row.appendChild(title);
     row.appendChild(sub);
     row.addEventListener("click", () => selectTabResult(tab.id, q));
     el.searchResults.appendChild(row);
   });
 
-  addGroup("Quick copy", results.snippets, snippet => {
+  addGroup(t("quickCopy.heading"), results.snippets, snippet => {
     const row = document.createElement("button");
     row.className = "search-result";
     const title = document.createElement("div");
@@ -1669,7 +1732,7 @@ function renderSearchResults(rawQuery) {
     const sub = document.createElement("div");
     sub.className = "search-result-sub";
     const scopeHint = !isSnippetGlobal(snippet)
-      ? `${(state.tabs.find(t => t.id === snippet.tabId) || {}).name || "a tab"} only · `
+      ? t("search.scopeHintOnly", { name: (state.tabs.find(t => t.id === snippet.tabId) || {}).name || t("search.aTabFallback") })
       : "";
     sub.textContent = scopeHint + snippet.value;
     row.appendChild(title);
@@ -1678,7 +1741,7 @@ function renderSearchResults(rawQuery) {
     el.searchResults.appendChild(row);
   });
 
-  addGroup("Saved from pages", results.highlights, ({ tab, highlight }) => {
+  addGroup(t("highlights.heading"), results.highlights, ({ tab, highlight }) => {
     const row = document.createElement("button");
     row.className = "search-result";
     const title = document.createElement("div");
