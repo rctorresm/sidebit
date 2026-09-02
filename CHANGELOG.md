@@ -3,6 +3,22 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.30.0 — 2026-09-02
+
+- A reminder firing now also surfaces its note tab: it moves to the front
+  of your unpinned tabs (right after any pinned ones) instead of relying
+  only on the flash and the notification to be noticed. Backup for the
+  case where you miss the notification or hit "OK" by mistake with a
+  dozen tabs open and no idea which one it was for.
+- It never jumps ahead of another tab that's still flashing from an
+  earlier, not-yet-opened reminder — a newly-fired tab lands right after
+  those, so whichever reminder has been waiting longest always stays
+  frontmost. A pinned tab's reminder firing doesn't move it at all, since
+  pinned tabs already sort above everything else.
+- This is a one-time move at the moment it fires, not a standing rule —
+  drag it anywhere afterward (before or after opening it) and it stays
+  put, same as any other tab.
+
 ## 1.29.0 — 2026-09-02
 
 - Added per-note reminders: hover a note tab to reveal a bell icon (stays
