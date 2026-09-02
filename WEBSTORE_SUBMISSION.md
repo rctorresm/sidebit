@@ -30,6 +30,8 @@ the packaged zip.
 >   own screenshot tool — it's organized into a gallery automatically
 > - Global search across everything you've saved
 > - A Recently Deleted trash with undo, per section
+> - Per-note reminders — pick a date and time and get notified even if the
+>   panel or browser was closed when it fires
 > - Export/import your data as a backup file
 >
 > Sidebit stores everything locally in your browser. It makes no network
@@ -68,6 +70,19 @@ somewhere under your own control long-term.)
 > Powers the "Download" button on saved screenshots, letting the user
 > save a copy of a screenshot to their computer via chrome.downloads.
 > Only triggered by an explicit user click; never automatic.
+
+**alarms**
+> Powers per-note reminders: when a user picks a date and time, this
+> schedules a chrome.alarms entry so the reminder still fires even if the
+> side panel or the browser itself is closed when the time comes. Not
+> used for anything else, and no data leaves the device — this only
+> triggers a local timer.
+
+**notifications**
+> Shows a local desktop notification when a reminder (see "alarms" above)
+> fires, so the user sees it even without the panel open. The
+> notification is generated entirely on-device from the note's own title;
+> nothing is sent anywhere to produce it.
 
 **scripting**
 > Used only in background.js to re-inject the already-approved content

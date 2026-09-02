@@ -154,7 +154,19 @@ const LOCALES = {
     "search.noMatches": 'No matches for "{query}".',
     "search.moreResults": "+{count} more — refine your search",
     "search.scopeHintOnly": "{name} only · ",
-    "search.aTabFallback": "a tab"
+    "search.aTabFallback": "a tab",
+
+    "reminder.heading": "Set reminder",
+    "reminder.dateLabel": "Date",
+    "reminder.timeLabel": "Time",
+    "reminder.timePlaceholder": "e.g. 915",
+    "reminder.set": "Set reminder",
+    "reminder.clear": "Clear reminder",
+    "reminder.errorIncomplete": "Pick a date and time first.",
+    "reminder.errorPast": "Pick a time in the future.",
+    "reminder.addTitle": "Set a reminder for this note",
+    "reminder.setTitle": "Reminder set for {time} — click to change",
+    "reminder.firedTitle": "Reminder — click to open and clear"
   },
 
   es: {
@@ -305,7 +317,19 @@ const LOCALES = {
     "search.noMatches": 'Sin resultados para "{query}".',
     "search.moreResults": "+{count} más — afina tu búsqueda",
     "search.scopeHintOnly": "Solo {name} · ",
-    "search.aTabFallback": "una pestaña"
+    "search.aTabFallback": "una pestaña",
+
+    "reminder.heading": "Configurar recordatorio",
+    "reminder.dateLabel": "Fecha",
+    "reminder.timeLabel": "Hora",
+    "reminder.timePlaceholder": "ej. 915",
+    "reminder.set": "Configurar recordatorio",
+    "reminder.clear": "Quitar recordatorio",
+    "reminder.errorIncomplete": "Elige una fecha y una hora primero.",
+    "reminder.errorPast": "Elige una hora futura.",
+    "reminder.addTitle": "Configurar un recordatorio para esta nota",
+    "reminder.setTitle": "Recordatorio para {time} — haz clic para cambiarlo",
+    "reminder.firedTitle": "Recordatorio — haz clic para abrir y quitarlo"
   }
 };
 

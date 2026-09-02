@@ -3,13 +3,14 @@
 A Chrome side panel for keeping notes docked open while you browse: separate
 note tabs for whatever you're working on, quick-copy snippets (global or
 scoped to a single tab), the ability to save highlighted text and
-screenshots from any page straight into your notes with one click, and
-appearance/backup settings on top.
+screenshots from any page straight into your notes with one click, per-note
+reminders, and appearance/backup settings on top.
 
 Built to be job-agnostic — it doesn't assume call-center work, sales, support,
 or any specific workflow. "Note" tabs are generic containers for whatever the
 user is currently focused on. Everything lives in `chrome.storage.local`;
-the extension makes zero network requests.
+the extension makes zero network requests — reminders use Chrome's own
+on-device `alarms`/`notifications` APIs, not a remote service.
 
 ## Install (unpacked)
 
@@ -32,20 +33,22 @@ the extension makes zero network requests.
   selection ("Save to sidebar") and tears it down again immediately after.
   No persistent overlay, no polling, no page mutation.
 - `sidepanel.html/css/js` — the panel UI itself. Renders note tabs
-  (pin + drag-to-reorder, pinned always sort first), the quick-copy
-  snippet list (drag-to-reorder in edit mode, split into global "All
-  tabs" and single-tab-scoped entries), the highlights saved to the
-  active note tab, a notes textarea that autosaves (debounced, 400ms)
-  and auto-grows with content, a per-tab screenshot gallery, global
-  search, a Recently Deleted trash with per-section Undo, and a Settings
-  modal (theme, text size, font, JSON export/import).
+  (pin + drag-to-reorder, pinned always sort first; each has a bell icon
+  for setting a reminder), the quick-copy snippet list (drag-to-reorder in
+  edit mode, split into global "All tabs" and single-tab-scoped entries),
+  the highlights saved to the active note tab, a notes textarea that
+  autosaves (debounced, 400ms) and auto-grows with content, a per-tab
+  screenshot gallery, global search, a Recently Deleted trash with
+  per-section Undo, and a Settings modal (theme, text size, font, JSON
+  export/import).
 - Data model in `chrome.storage.local`:
   ```
   {
     tabs: [{
       id, name, notes, pinned,
       highlights: [{ id, text, source, title, url, time }],
-      screenshots: [{ id, dataUrl, time }]
+      screenshots: [{ id, dataUrl, time }],
+      reminder: { id, time, fired } | null
     }],
     activeTabId: string,
     snippets: [{ id, label, value, scope: "all" | "tab", tabId }],
@@ -53,6 +56,16 @@ the extension makes zero network requests.
     trash: [{ id, type, deletedAt, index, ...typeSpecificFields }]
   }
   ```
+  A reminder is scheduled as a `chrome.alarms` entry named
+  `reminder-<tabId>`, created/cleared directly from `sidepanel.js`. When it
+  fires, `background.js` (woken by the alarm even if the panel and browser
+  were closed) flips `reminder.fired` to `true` and shows a
+  `chrome.notifications` popup with "OK" and "Take me there" buttons. The
+  note tab flashes red the whole time `fired` is `true` — dismissing the
+  notification doesn't clear it; only actually opening that note (clicking
+  its tab, "Take me there", or a search result) does, by setting
+  `reminder` back to `null`. Closing a note tab cancels any pending alarm
+  and drops its reminder rather than carrying a stale one into the trash.
   `highlights[].url` is the plain source page URL. `screenshots[].dataUrl`
   comes either from `chrome.tabs.captureVisibleTab` (viewport-only, not
   full-page) or from pasting an image (e.g. from the OS's own snipping
@@ -61,7 +74,10 @@ the extension makes zero network requests.
 - The panel listens for `chrome.storage.onChanged` so it stays in sync
   whether a highlight was saved from a background tab or storage changed in
   another window.
-- Permission notes: `unlimitedStorage` is for screenshots (potentially many,
+- Permission notes: `alarms` schedules per-note reminders so they still fire
+  after the panel or browser was closed; `notifications` shows the popup
+  when one does. Neither involves a network call — both are on-device
+  Chrome APIs. `unlimitedStorage` is for screenshots (potentially many,
   uncompressed PNGs); `downloads` is for the screenshot lightbox's Download
   button (`chrome.downloads.download` with `saveAs: true`, always prompts
   for a location rather than silently saving); `scripting` is used only by

@@ -128,7 +128,16 @@ const el = {
   searchInput: document.getElementById("searchInput"),
   searchResults: document.getElementById("searchResults"),
   trashList: document.getElementById("trashList"),
-  emptyTrashBtn: document.getElementById("emptyTrashBtn")
+  emptyTrashBtn: document.getElementById("emptyTrashBtn"),
+  reminderModal: document.getElementById("reminderModal"),
+  reminderModalHeading: document.getElementById("reminderModalHeading"),
+  closeReminderBtn: document.getElementById("closeReminderBtn"),
+  reminderDateInput: document.getElementById("reminderDateInput"),
+  reminderTimeInput: document.getElementById("reminderTimeInput"),
+  reminderAmPmChoices: document.getElementById("reminderAmPmChoices"),
+  reminderStatus: document.getElementById("reminderStatus"),
+  clearReminderBtn: document.getElementById("clearReminderBtn"),
+  saveReminderBtn: document.getElementById("saveReminderBtn")
 };
 
 let currentLightboxShot = null;
@@ -299,7 +308,7 @@ function trashEntryTitle(entry) {
 function resolveOwningTab(tabs, entry) {
   let target = tabs.find(t => t.id === entry.tabId);
   if (target) return { tabs, tab: target };
-  const fresh = { id: entry.tabId, name: entry.tabName || t("tabs.restoredName"), notes: "", highlights: [], screenshots: [], pinned: false };
+  const fresh = { id: entry.tabId, name: entry.tabName || t("tabs.restoredName"), notes: "", highlights: [], screenshots: [], pinned: false, reminder: null };
   return { tabs: [...tabs, fresh], tab: fresh };
 }
 
@@ -641,6 +650,27 @@ function isTabEmpty(tab) {
   return !(tab.notes || "").trim() && !(tab.highlights || []).length && !(tab.screenshots || []).length;
 }
 
+// Returns an updated tabs array with the given tab's fired reminder cleared,
+// or null if there's nothing to clear — a fired reminder only stops once
+// the note is actually opened (see openNoteTab below), never just from
+// dismissing the notification.
+function tabsWithReminderCleared(tabId) {
+  const tab = state.tabs.find(t => t.id === tabId);
+  if (!tab || !tab.reminder || !tab.reminder.fired) return null;
+  return state.tabs.map(t => (t.id === tabId ? { ...t, reminder: null } : t));
+}
+
+async function openNoteTab(tabId) {
+  const switching = tabId !== state.activeTabId;
+  const clearedTabs = tabsWithReminderCleared(tabId);
+  if (!switching && !clearedTabs) return;
+  const updates = {};
+  if (switching) updates.activeTabId = tabId;
+  if (clearedTabs) updates.tabs = clearedTabs;
+  await persist(updates);
+  renderAll();
+}
+
 function renderTabs() {
   wireUndoButton(el.undoTabBtn, "tab");
   el.tabsRow.innerHTML = "";
@@ -651,7 +681,8 @@ function renderTabs() {
 
   ordered.forEach(tab => {
     const row = document.createElement("div");
-    row.className = "note-tab" + (tab.id === state.activeTabId ? " active" : "");
+    const isFlashing = !!(tab.reminder && tab.reminder.fired);
+    row.className = "note-tab" + (tab.id === state.activeTabId ? " active" : "") + (isFlashing ? " reminder-flash" : "");
     row.dataset.tabId = tab.id;
     row.draggable = true;
 
@@ -666,6 +697,20 @@ function renderTabs() {
       renderAll();
     });
     row.appendChild(pinBtn);
+
+    const reminderBtn = document.createElement("button");
+    reminderBtn.className = "reminder-btn" + (tab.reminder ? " has-reminder" : "");
+    reminderBtn.title = isFlashing
+      ? t("reminder.firedTitle")
+      : tab.reminder
+        ? t("reminder.setTitle", { time: formatReminderTime(tab.reminder.time) })
+        : t("reminder.addTitle");
+    reminderBtn.innerHTML = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>`;
+    reminderBtn.addEventListener("click", e => {
+      e.stopPropagation();
+      openReminderModal(tab.id);
+    });
+    row.appendChild(reminderBtn);
 
     const label = document.createElement("span");
     label.textContent = tab.name;
@@ -687,11 +732,7 @@ function renderTabs() {
     });
     row.appendChild(closeX);
 
-    row.addEventListener("click", () => {
-      if (tab.id !== state.activeTabId) {
-        persist({ activeTabId: tab.id }).then(renderAll);
-      }
-    });
+    row.addEventListener("click", () => openNoteTab(tab.id));
 
     row.addEventListener("dblclick", () => startRename(row, tab, label));
 
@@ -767,25 +808,185 @@ async function closeTab(tabId) {
   let remaining = state.tabs.filter(t => t.id !== tabId);
   let newActive = state.activeTabId;
   if (remaining.length === 0) {
-    const fresh = { id: uid(), name: t("tabs.defaultName", { n: 1 }), notes: "", highlights: [], screenshots: [], pinned: false };
+    const fresh = { id: uid(), name: t("tabs.defaultName", { n: 1 }), notes: "", highlights: [], screenshots: [], pinned: false, reminder: null };
     remaining = [fresh];
     newActive = fresh.id;
   } else if (tabId === state.activeTabId) {
     newActive = remaining[remaining.length - 1].id;
   }
   await persist({ tabs: remaining, activeTabId: newActive });
-  if (closedTab) await trashItem({ type: "tab", tab: closedTab, index: closedIndex });
+  if (closedTab) {
+    // A closed tab's pending reminder is cancelled outright rather than
+    // carried into the trash — restoring the tab later shouldn't bring back
+    // an alarm that no longer exists (or a stale "fired" flash).
+    if (closedTab.reminder) chrome.alarms.clear(`reminder-${tabId}`);
+    await trashItem({ type: "tab", tab: { ...closedTab, reminder: null }, index: closedIndex });
+  }
   notesQuipPickers.delete(tabId);
   renderAll();
 }
 
 el.newTabBtn.addEventListener("click", async () => {
   const n = state.tabs.length + 1;
-  const fresh = { id: uid(), name: t("tabs.defaultName", { n }), notes: "", highlights: [], screenshots: [], pinned: false };
+  const fresh = { id: uid(), name: t("tabs.defaultName", { n }), notes: "", highlights: [], screenshots: [], pinned: false, reminder: null };
   const tabs = [...state.tabs, fresh];
   await persist({ tabs, activeTabId: fresh.id });
   renderAll();
   el.notesArea.focus();
+});
+
+/* ---------------- Reminders ---------------- */
+
+let reminderModalTabId = null;
+let reminderAmPm = "AM";
+
+function pad2(n) {
+  return String(n).padStart(2, "0");
+}
+
+function formatReminderTime(epochMs) {
+  return new Date(epochMs).toLocaleString(state.settings.language === "es" ? "es" : "en-US", {
+    dateStyle: "medium",
+    timeStyle: "short"
+  });
+}
+
+function toDateInputValue(d) {
+  return `${d.getFullYear()}-${pad2(d.getMonth() + 1)}-${pad2(d.getDate())}`;
+}
+
+// Turns whatever digits were typed into a 12-hour {hour, minute}. The field
+// itself caps input at 4 characters (see the input listener below), so a
+// "huge invalid number" can't reach here in the first place:
+//   1-2 digits -> that hour, on the :00        ("9" -> 9:00, "12" -> 12:00)
+//   3 digits   -> first digit = hour, rest = minutes  ("915" -> 9:15)
+//   4 digits   -> first two = hour, rest = minutes    ("1001" -> 10:01)
+// An hour or minute outside the valid range clamps to the closest valid
+// value instead of being rejected.
+function parseTypedTime(raw) {
+  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  if (!digits) return null;
+  let hour, minute;
+  if (digits.length <= 2) {
+    hour = parseInt(digits, 10);
+    minute = 0;
+  } else if (digits.length === 3) {
+    hour = parseInt(digits.slice(0, 1), 10);
+    minute = parseInt(digits.slice(1), 10);
+  } else {
+    hour = parseInt(digits.slice(0, 2), 10);
+    minute = parseInt(digits.slice(2), 10);
+  }
+  if (hour === 0) hour = 12;
+  if (hour > 12) hour = 12;
+  if (minute > 59) minute = 59;
+  return { hour, minute };
+}
+
+function syncReminderAmPmButtons() {
+  [...el.reminderAmPmChoices.children].forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.ampm === reminderAmPm);
+  });
+}
+
+function openReminderModal(tabId) {
+  const tab = state.tabs.find(t => t.id === tabId);
+  if (!tab) return;
+  reminderModalTabId = tabId;
+
+  const now = new Date();
+  let datePart = now;
+  let hour12 = null;
+  let minute = null;
+  let ampm = now.getHours() < 12 ? "AM" : "PM";
+
+  if (tab.reminder && tab.reminder.time) {
+    datePart = new Date(tab.reminder.time);
+    const h24 = datePart.getHours();
+    hour12 = h24 % 12 === 0 ? 12 : h24 % 12;
+    minute = datePart.getMinutes();
+    ampm = h24 < 12 ? "AM" : "PM";
+  }
+
+  el.reminderModalHeading.textContent = t("reminder.heading");
+  el.reminderDateInput.min = toDateInputValue(now);
+  el.reminderDateInput.value = toDateInputValue(datePart);
+  el.reminderTimeInput.value = hour12 != null ? `${hour12}${pad2(minute)}` : "";
+  reminderAmPm = ampm;
+  syncReminderAmPmButtons();
+  el.reminderStatus.textContent = "";
+  el.reminderStatus.classList.remove("error");
+  el.clearReminderBtn.classList.toggle("hidden", !tab.reminder);
+  el.reminderModal.classList.remove("hidden");
+  el.reminderTimeInput.focus();
+}
+
+function closeReminderModal() {
+  el.reminderModal.classList.add("hidden");
+  reminderModalTabId = null;
+}
+
+el.reminderTimeInput.addEventListener("input", () => {
+  el.reminderTimeInput.value = el.reminderTimeInput.value.replace(/\D/g, "").slice(0, 4);
+});
+el.reminderTimeInput.addEventListener("keydown", e => {
+  if (e.key === "Enter") el.saveReminderBtn.click();
+});
+
+el.reminderAmPmChoices.addEventListener("click", e => {
+  const btn = e.target.closest(".choice-btn");
+  if (!btn) return;
+  reminderAmPm = btn.dataset.ampm;
+  syncReminderAmPmButtons();
+});
+
+el.closeReminderBtn.addEventListener("click", closeReminderModal);
+el.reminderModal.addEventListener("click", e => {
+  if (e.target === el.reminderModal) closeReminderModal();
+});
+
+el.saveReminderBtn.addEventListener("click", async () => {
+  const tabId = reminderModalTabId;
+  const tab = state.tabs.find(t => t.id === tabId);
+  if (!tab) return;
+
+  const parsed = parseTypedTime(el.reminderTimeInput.value);
+  if (!parsed || !el.reminderDateInput.value) {
+    el.reminderStatus.textContent = t("reminder.errorIncomplete");
+    el.reminderStatus.classList.add("error");
+    return;
+  }
+
+  const [y, m, d] = el.reminderDateInput.value.split("-").map(Number);
+  let hour24 = parsed.hour % 12;
+  if (reminderAmPm === "PM") hour24 += 12;
+  const when = new Date(y, m - 1, d, hour24, parsed.minute, 0, 0).getTime();
+
+  if (when <= Date.now()) {
+    el.reminderStatus.textContent = t("reminder.errorPast");
+    el.reminderStatus.classList.add("error");
+    return;
+  }
+
+  const reminder = { id: uid(), time: when, fired: false };
+  const updatedTabs = state.tabs.map(t => (t.id === tabId ? { ...t, reminder } : t));
+  await persist({ tabs: updatedTabs });
+  // Creating an alarm with a name that's already in use replaces the
+  // existing one, so any previously pending reminder for this tab is
+  // implicitly cancelled.
+  chrome.alarms.create(`reminder-${tabId}`, { when });
+  closeReminderModal();
+  renderAll();
+});
+
+el.clearReminderBtn.addEventListener("click", async () => {
+  const tabId = reminderModalTabId;
+  if (!tabId) return;
+  const updatedTabs = state.tabs.map(t => (t.id === tabId ? { ...t, reminder: null } : t));
+  await persist({ tabs: updatedTabs });
+  chrome.alarms.clear(`reminder-${tabId}`);
+  closeReminderModal();
+  renderAll();
 });
 
 /* ---------------- Snippets ---------------- */
@@ -1190,12 +1391,21 @@ function updateNotesCounter() {
   el.notesCounter.textContent = getNotesQuipPicker(tab.id).get(text.length);
 }
 
+// Tracks which tab's notes the textarea currently displays, independent of
+// state.activeTabId, so a render can tell "the same tab changed under me"
+// (e.g. a sync from another window while typing — never clobber that) apart
+// from "the active tab itself changed" (e.g. a reminder's "Take me there" —
+// that always has to show up, focused or not, since nothing else drives it).
+let notesAreaTabId = null;
+
 function renderNotes() {
   const tab = activeTab();
   const value = tab ? tab.notes || "" : "";
-  if (document.activeElement !== el.notesArea) {
+  const tabId = tab ? tab.id : null;
+  if (document.activeElement !== el.notesArea || tabId !== notesAreaTabId) {
     el.notesArea.value = value;
   }
+  notesAreaTabId = tabId;
   el.clearNotesBtn.classList.toggle("hidden", !value.trim());
   autoGrowNotes();
   updateNotesCounter();
@@ -1217,12 +1427,21 @@ el.clearNotesBtn.addEventListener("click", async () => {
 el.notesArea.addEventListener("input", () => {
   autoGrowNotes();
   updateNotesCounter();
+  // Both captured now, not when the timer fires: if the active tab changes
+  // during this 400ms window (e.g. a reminder's "Take me there" switches
+  // tabs while this debounce is still pending), that switch immediately
+  // repaints the textarea with the *new* tab's notes (see renderNotes) --
+  // reading el.notesArea.value from inside the timeout at that point would
+  // save the wrong tab's just-displayed text right back over itself. Taking
+  // both the target tab and the typed value as of this exact keystroke
+  // keeps the save correct regardless of what the textarea shows later.
+  const savingTab = activeTab();
+  const savingValue = el.notesArea.value;
   clearTimeout(notesSaveTimer);
   notesSaveTimer = setTimeout(async () => {
-    const tab = activeTab();
-    if (!tab) return;
+    if (!savingTab) return;
     const updatedTabs = state.tabs.map(t =>
-      t.id === tab.id ? { ...t, notes: el.notesArea.value } : t
+      t.id === savingTab.id ? { ...t, notes: savingValue } : t
     );
     await persist({ tabs: updatedTabs });
     el.saveIndicator.textContent = t("notes.saved");
@@ -1616,8 +1835,12 @@ function closeSearch() {
 
 async function selectTabResult(tabId, query) {
   const switching = tabId !== state.activeTabId;
-  if (switching) {
-    await persist({ activeTabId: tabId });
+  const clearedTabs = tabsWithReminderCleared(tabId);
+  if (switching || clearedTabs) {
+    const updates = {};
+    if (switching) updates.activeTabId = tabId;
+    if (clearedTabs) updates.tabs = clearedTabs;
+    await persist(updates);
     renderAll();
   }
   closeSearch();

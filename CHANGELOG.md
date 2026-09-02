@@ -3,6 +3,39 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.29.0 — 2026-09-02
+
+- Added per-note reminders: hover a note tab to reveal a bell icon (stays
+  visible once a reminder is set); click it to pick a date (native calendar
+  picker) and a time. The time field just takes typed digits — `915` →
+  9:15, `1001` → 10:01 — plus an AM/PM toggle, so there's no fiddly
+  click-between-preset-slots. Only one reminder per note tab; setting a new
+  one replaces the old.
+- When a reminder fires — even if the panel or browser was closed at the
+  time — a notification appears ("Reminder for '<note name>'") with two
+  buttons: "OK" just dismisses it, and "Take me there" opens the side panel
+  and switches straight to that note. Either way, the note tab itself
+  starts flashing red and keeps flashing (independent of the notification)
+  until that note is actually opened — clicking its tab, "Take me there",
+  or a matching search result all clear it; dismissing the notification
+  alone does not.
+- New `alarms` and `notifications` permissions, both purely on-device —
+  reminders don't add any network requests.
+- Closing a note tab cancels its pending reminder outright rather than
+  carrying it into Recently Deleted, so a restored tab never comes back
+  with a stale alarm or a phantom flash.
+- Fixed "Take me there": it correctly stopped the flash and switched the
+  active tab internally, but if Notes still had focus (e.g. you were mid-
+  typing when the reminder fired), the textarea kept showing the old note
+  instead of the one you were taken to — a guard meant to protect
+  in-progress typing from being overwritten by unrelated syncs was also
+  blocking the deliberate tab switch. Fixed alongside it: typing in Notes,
+  then switching tabs before the 400ms autosave debounce finishes, could
+  save that text into the wrong note (or have it overwritten before it
+  saved) — the debounce now captures both the target note and the typed
+  text at keystroke time instead of reading them again when the timer
+  fires.
+
 ## 1.28.0 — 2026-08-14
 
 - Added Spanish as a second language. New "Language" section at the top of
