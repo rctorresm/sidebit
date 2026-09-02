@@ -64,8 +64,14 @@ on-device `alarms`/`notifications` APIs, not a remote service.
   note tab flashes red the whole time `fired` is `true` — dismissing the
   notification doesn't clear it; only actually opening that note (clicking
   its tab, "Take me there", or a search result) does, by setting
-  `reminder` back to `null`. Closing a note tab cancels any pending alarm
-  and drops its reminder rather than carrying a stale one into the trash.
+  `reminder` back to `null`. The same alarm handler also moves the fired
+  tab to the front of the unpinned tabs (a pinned tab's firing doesn't move
+  it) as a backup for missing the notification — but never ahead of another
+  tab that's still flashing from an earlier, not-yet-opened reminder, so
+  the longest-waiting one stays frontmost. It's a one-time move at fire
+  time, not an ongoing sort, so dragging a tab afterward sticks. Closing a
+  note tab cancels any pending alarm and drops its reminder rather than
+  carrying a stale one into the trash.
   `highlights[].url` is the plain source page URL. `screenshots[].dataUrl`
   comes either from `chrome.tabs.captureVisibleTab` (viewport-only, not
   full-page) or from pasting an image (e.g. from the OS's own snipping

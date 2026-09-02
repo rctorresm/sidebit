@@ -171,9 +171,23 @@ chrome.alarms.onAlarm.addListener(async alarm => {
   const tab = tabs.find(t => t.id === tabId);
   if (!tab || !tab.reminder) return; // cleared or the tab was closed before this fired
 
-  const updatedTabs = tabs.map(t =>
-    t.id === tabId ? { ...t, reminder: { ...t.reminder, fired: true } } : t
-  );
+  const firedTab = { ...tab, reminder: { ...tab.reminder, fired: true } };
+  let updatedTabs;
+  if (firedTab.pinned) {
+    // Pinned tabs already sort above everything else — nothing to move.
+    updatedTabs = tabs.map(t => (t.id === tabId ? firedTab : t));
+  } else {
+    // Surface the fired tab as a backup for missing or dismissing the OS
+    // notification: move it to the front of the unpinned tabs. It never
+    // jumps ahead of another tab that's still flashing from an earlier,
+    // not-yet-opened reminder though — it lands right after those, so the
+    // longest-unopened reminder always stays frontmost.
+    const pinned = tabs.filter(t => t.pinned);
+    const unpinnedRest = tabs.filter(t => !t.pinned && t.id !== tabId);
+    const stillFlashing = unpinnedRest.filter(t => t.reminder && t.reminder.fired);
+    const notFlashing = unpinnedRest.filter(t => !(t.reminder && t.reminder.fired));
+    updatedTabs = [...pinned, ...stillFlashing, firedTab, ...notFlashing];
+  }
   await chrome.storage.local.set({ tabs: updatedTabs });
 
   const copy = reminderCopy(settings);
