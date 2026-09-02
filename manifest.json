@@ -1,9 +1,9 @@
 {
   "manifest_version": 3,
   "name": "Sidebit",
-  "version": "1.28.0",
-  "description": "Always-on side panel for quick notes, one-click quick-copy snippets, and saving highlighted text from any page.",
-  "permissions": ["storage", "sidePanel", "unlimitedStorage", "downloads", "scripting"],
+  "version": "1.29.0",
+  "description": "Always-on side panel for quick notes, one-click quick-copy snippets, saving highlighted text from any page, and per-note reminders.",
+  "permissions": ["storage", "sidePanel", "unlimitedStorage", "downloads", "scripting", "alarms", "notifications"],
   "host_permissions": ["<all_urls>"],
   "background": {
     "service_worker": "background.js"

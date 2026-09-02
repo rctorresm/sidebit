@@ -225,6 +225,39 @@
     </div>
   </div>
 
+  <div id="reminderModal" class="settings-modal hidden">
+    <div class="reminder-card">
+      <div class="panel-head">
+        <h2 id="reminderModalHeading" data-i18n="reminder.heading">Set reminder</h2>
+        <button class="icon-btn" id="closeReminderBtn" data-i18n-title="common.close" title="Close">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="reminder-field">
+        <label class="settings-label" for="reminderDateInput" data-i18n="reminder.dateLabel">Date</label>
+        <input type="date" id="reminderDateInput" />
+      </div>
+      <div class="reminder-field">
+        <label class="settings-label" for="reminderTimeInput" data-i18n="reminder.timeLabel">Time</label>
+        <div class="reminder-time-row">
+          <input type="text" id="reminderTimeInput" inputmode="numeric" maxlength="4" data-i18n-placeholder="reminder.timePlaceholder" placeholder="e.g. 915" />
+          <div class="choice-row reminder-ampm" id="reminderAmPmChoices">
+            <button type="button" class="choice-btn" data-ampm="AM">AM</button>
+            <button type="button" class="choice-btn" data-ampm="PM">PM</button>
+          </div>
+        </div>
+      </div>
+      <div id="reminderStatus" class="status-text"></div>
+      <div class="reminder-actions">
+        <button class="small-btn secondary-btn danger-btn hidden" id="clearReminderBtn" data-i18n="reminder.clear">Clear reminder</button>
+        <button class="small-btn" id="saveReminderBtn" data-i18n="reminder.set">Set reminder</button>
+      </div>
+    </div>
+  </div>
+
   <div id="settingsModal" class="settings-modal hidden">
     <div class="settings-card">
       <div class="panel-head">

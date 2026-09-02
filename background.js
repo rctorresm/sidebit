@@ -6,7 +6,7 @@
 const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
 function defaultTab(n) {
-  return { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [], pinned: false };
+  return { id: uid(), name: `Note ${n}`, notes: "", highlights: [], screenshots: [], pinned: false, reminder: null };
 }
 
 // First install: seed one blank note tab so there's somewhere to type —
@@ -138,4 +138,84 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     })();
     return true; // keep the message channel open for the async response
   }
+});
+
+/* ---------------- Reminders ---------------- */
+// A reminder is scheduled as a chrome.alarms entry named "reminder-<tabId>"
+// (sidepanel.js creates/clears these directly — the alarms permission is
+// extension-wide, not background-only). Alarms persist and fire even with
+// the panel and browser closed, which is why the follow-through — flipping
+// reminder.fired and showing the notification — has to live here rather
+// than in the panel's own script.
+//
+// Notification copy is duplicated here in plain English/Spanish rather than
+// pulled from locales.js: that file is only loaded by sidepanel.html, and
+// background.js is a separate service worker script with no DOM to load it
+// into.
+const REMINDER_ALARM_PREFIX = "reminder-";
+const REMINDER_NOTIF_PREFIX = "reminder-note-";
+const REMINDER_TEXT = {
+  en: { title: name => `Reminder for "${name}"`, dismiss: "OK", takeThere: "Take me there" },
+  es: { title: name => `Recordatorio para "${name}"`, dismiss: "Aceptar", takeThere: "Llévame allí" }
+};
+
+function reminderCopy(settings) {
+  return REMINDER_TEXT[settings && settings.language === "es" ? "es" : "en"];
+}
+
+chrome.alarms.onAlarm.addListener(async alarm => {
+  if (!alarm.name.startsWith(REMINDER_ALARM_PREFIX)) return;
+  const tabId = alarm.name.slice(REMINDER_ALARM_PREFIX.length);
+
+  const { tabs = [], settings } = await chrome.storage.local.get(["tabs", "settings"]);
+  const tab = tabs.find(t => t.id === tabId);
+  if (!tab || !tab.reminder) return; // cleared or the tab was closed before this fired
+
+  const updatedTabs = tabs.map(t =>
+    t.id === tabId ? { ...t, reminder: { ...t.reminder, fired: true } } : t
+  );
+  await chrome.storage.local.set({ tabs: updatedTabs });
+
+  const copy = reminderCopy(settings);
+  chrome.notifications.create(`${REMINDER_NOTIF_PREFIX}${tabId}`, {
+    type: "basic",
+    iconUrl: "icons/icon128.png",
+    title: copy.title(tab.name),
+    // `message` is a required field, but the note name is already in the
+    // title above — no need to repeat it, so this is just a single space.
+    message: " ",
+    buttons: [{ title: copy.dismiss }, { title: copy.takeThere }]
+  });
+});
+
+// Only a fired reminder is cleared here — a defensive check in case this
+// somehow runs before the alarm handler above has flipped it.
+async function activateNoteTabFromNotification(tabId) {
+  const { tabs = [] } = await chrome.storage.local.get(["tabs"]);
+  const tab = tabs.find(t => t.id === tabId);
+  if (!tab) return;
+  const updatedTabs = tab.reminder && tab.reminder.fired
+    ? tabs.map(t => (t.id === tabId ? { ...t, reminder: null } : t))
+    : tabs;
+  await chrome.storage.local.set({ tabs: updatedTabs, activeTabId: tabId });
+
+  try {
+    const win = await chrome.windows.getLastFocused({ populate: false });
+    if (win && win.id !== undefined) await chrome.sidePanel.open({ windowId: win.id });
+  } catch {
+    // No focused window to open the panel into — nothing more we can do.
+  }
+}
+
+// Clicking the notification body itself (not a button) just dismisses it,
+// same as the "OK" button below — no navigation.
+chrome.notifications.onClicked.addListener(notificationId => {
+  chrome.notifications.clear(notificationId);
+});
+
+chrome.notifications.onButtonClicked.addListener(async (notificationId, buttonIndex) => {
+  if (!notificationId.startsWith(REMINDER_NOTIF_PREFIX)) return;
+  const tabId = notificationId.slice(REMINDER_NOTIF_PREFIX.length);
+  chrome.notifications.clear(notificationId);
+  if (buttonIndex === 1) await activateNoteTabFromNotification(tabId);
 });
