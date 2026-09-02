@@ -1391,12 +1391,21 @@ function updateNotesCounter() {
   el.notesCounter.textContent = getNotesQuipPicker(tab.id).get(text.length);
 }
 
+// Tracks which tab's notes the textarea currently displays, independent of
+// state.activeTabId, so a render can tell "the same tab changed under me"
+// (e.g. a sync from another window while typing — never clobber that) apart
+// from "the active tab itself changed" (e.g. a reminder's "Take me there" —
+// that always has to show up, focused or not, since nothing else drives it).
+let notesAreaTabId = null;
+
 function renderNotes() {
   const tab = activeTab();
   const value = tab ? tab.notes || "" : "";
-  if (document.activeElement !== el.notesArea) {
+  const tabId = tab ? tab.id : null;
+  if (document.activeElement !== el.notesArea || tabId !== notesAreaTabId) {
     el.notesArea.value = value;
   }
+  notesAreaTabId = tabId;
   el.clearNotesBtn.classList.toggle("hidden", !value.trim());
   autoGrowNotes();
   updateNotesCounter();
@@ -1418,12 +1427,21 @@ el.clearNotesBtn.addEventListener("click", async () => {
 el.notesArea.addEventListener("input", () => {
   autoGrowNotes();
   updateNotesCounter();
+  // Both captured now, not when the timer fires: if the active tab changes
+  // during this 400ms window (e.g. a reminder's "Take me there" switches
+  // tabs while this debounce is still pending), that switch immediately
+  // repaints the textarea with the *new* tab's notes (see renderNotes) --
+  // reading el.notesArea.value from inside the timeout at that point would
+  // save the wrong tab's just-displayed text right back over itself. Taking
+  // both the target tab and the typed value as of this exact keystroke
+  // keeps the save correct regardless of what the textarea shows later.
+  const savingTab = activeTab();
+  const savingValue = el.notesArea.value;
   clearTimeout(notesSaveTimer);
   notesSaveTimer = setTimeout(async () => {
-    const tab = activeTab();
-    if (!tab) return;
+    if (!savingTab) return;
     const updatedTabs = state.tabs.map(t =>
-      t.id === tab.id ? { ...t, notes: el.notesArea.value } : t
+      t.id === savingTab.id ? { ...t, notes: savingValue } : t
     );
     await persist({ tabs: updatedTabs });
     el.saveIndicator.textContent = t("notes.saved");

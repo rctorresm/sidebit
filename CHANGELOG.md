@@ -24,6 +24,17 @@ Format: newest first.
 - Closing a note tab cancels its pending reminder outright rather than
   carrying it into Recently Deleted, so a restored tab never comes back
   with a stale alarm or a phantom flash.
+- Fixed "Take me there": it correctly stopped the flash and switched the
+  active tab internally, but if Notes still had focus (e.g. you were mid-
+  typing when the reminder fired), the textarea kept showing the old note
+  instead of the one you were taken to — a guard meant to protect
+  in-progress typing from being overwritten by unrelated syncs was also
+  blocking the deliberate tab switch. Fixed alongside it: typing in Notes,
+  then switching tabs before the 400ms autosave debounce finishes, could
+  save that text into the wrong note (or have it overwritten before it
+  saved) — the debounce now captures both the target note and the typed
+  text at keystroke time instead of reading them again when the timer
+  fires.
 
 ## 1.28.0 — 2026-08-14
 
