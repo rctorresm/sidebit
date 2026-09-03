@@ -23,6 +23,10 @@ Format: newest first.
   Reopening a saved reminder now shows the colon too instead of the raw
   digits it used to. Placeholder text and a small hint under the field spell
   out that only numbers need to be typed.
+- An accidental leading zero (e.g. typing `0510` instead of `510`) is now
+  dropped once a later digit makes clear more of the number is coming, so it
+  still reads as `5:10` instead of `05:10` — a leading zero was never a real
+  hour digit on this 12-hour, AM/PM-toggle field to begin with.
 
 ## 1.30.0 — 2026-09-02
 

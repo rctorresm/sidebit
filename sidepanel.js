@@ -884,8 +884,22 @@ function toDateInputValue(d) {
 //   4 digits   -> first two = hour, rest = minutes    ("1001" -> 10:01)
 // An hour or minute outside the valid range clamps to the closest valid
 // value instead of being rejected.
+// A leading zero can't be a real hour digit on a 12-hour clock, so once a
+// later digit shows there's more of the number coming, drop it — typing
+// "0510" (an accidental extra 0 before "510") reads the same as "510":
+// 5:10, not 05:10. A lone "0" (nothing after it yet) is left alone so the
+// field doesn't look like the keystroke was swallowed. Allows up to 5 raw
+// digits in so a single stray leading zero doesn't push a real digit past
+// the 4-digit cap.
+function stripLeadingZero(digits) {
+  return /[1-9]/.test(digits) ? digits.replace(/^0+/, "") : digits;
+}
+function normalizeTypedTimeDigits(raw) {
+  return stripLeadingZero(raw.replace(/\D/g, "").slice(0, 5)).slice(0, 4);
+}
+
 function parseTypedTime(raw) {
-  const digits = raw.replace(/\D/g, "").slice(0, 4);
+  const digits = normalizeTypedTimeDigits(raw);
   if (!digits) return null;
   let hour, minute;
   if (digits.length <= 2) {
@@ -957,7 +971,7 @@ function closeReminderModal() {
 }
 
 el.reminderTimeInput.addEventListener("input", () => {
-  const digits = el.reminderTimeInput.value.replace(/\D/g, "").slice(0, 4);
+  const digits = normalizeTypedTimeDigits(el.reminderTimeInput.value);
   el.reminderTimeInput.value = formatTypedTimeDisplay(digits);
 });
 el.reminderTimeInput.addEventListener("keydown", e => {
