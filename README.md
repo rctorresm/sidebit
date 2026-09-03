@@ -39,8 +39,9 @@ on-device `alarms`/`notifications` APIs, not a remote service.
   the highlights saved to the active note tab, a notes textarea that
   autosaves (debounced, 400ms) and auto-grows with content, a per-tab
   screenshot gallery, global search, a Recently Deleted trash with
-  per-section Undo, and a Settings modal (theme, text size, font, JSON
-  export/import).
+  per-section Undo, a header "What's new" icon (badged on update, opens a
+  hosted changelog page), and a Settings modal (theme, text size, font,
+  JSON export/import).
 - Data model in `chrome.storage.local`:
   ```
   {
@@ -53,7 +54,8 @@ on-device `alarms`/`notifications` APIs, not a remote service.
     activeTabId: string,
     snippets: [{ id, label, value, scope: "all" | "tab", tabId }],
     settings: { theme, font, textSize, quickCopyCollapsed, savedPagesCollapsed },
-    trash: [{ id, type, deletedAt, index, ...typeSpecificFields }]
+    trash: [{ id, type, deletedAt, index, ...typeSpecificFields }],
+    hasUnseenUpdate: boolean
   }
   ```
   A reminder is scheduled as a `chrome.alarms` entry named
@@ -80,6 +82,12 @@ on-device `alarms`/`notifications` APIs, not a remote service.
 - The panel listens for `chrome.storage.onChanged` so it stays in sync
   whether a highlight was saved from a background tab or storage changed in
   another window.
+- `hasUnseenUpdate` flips to `true` in `background.js`'s `onInstalled`
+  listener whenever `details.reason === "update"` (never on a fresh
+  install) — the same moment `content.js` gets re-injected. It puts a dot
+  on the header's "What's new" icon; clicking it opens `WHATS_NEW_URL` (a
+  hosted page, not bundled, so its copy can be edited without a new
+  extension release) in a new tab and clears the flag.
 - Permission notes: `alarms` schedules per-note reminders so they still fire
   after the panel or browser was closed; `notifications` shows the popup
   when one does. Neither involves a network call — both are on-device

@@ -3,6 +3,27 @@
 All notable changes to Sidebit (formerly NoteDock) are recorded here.
 Format: newest first.
 
+## 1.31.0 — 2026-09-03
+
+- Added a "What's new" icon (gift icon, next to Settings) that gets a small
+  dot whenever Sidebit updates itself in the background — since the
+  extension auto-updates silently, this is the first visible way to learn
+  that something changed and what it was. Click it to open a hosted
+  changelog page in a new tab (kept outside the extension package so it can
+  be edited any time without shipping a new version); the dot clears the
+  moment it's clicked. Lights up only on a real update
+  (`chrome.runtime.onInstalled` with `reason === "update"`, the same signal
+  already used for re-injecting `content.js`) — never on a fresh install.
+- Reminder time entry now formats itself as you type: entering `915` shows
+  `9:15` as soon as the third digit lands, and it keeps reshaping live
+  (`1030` → `10:30` as the fourth digit arrives) — typing is still just
+  numbers, nothing new to learn. The colon is inserted before the last two
+  digits, which is exactly how the field already decided hour vs. minutes,
+  so nothing about validation or saving changed, only the display.
+  Reopening a saved reminder now shows the colon too instead of the raw
+  digits it used to. Placeholder text and a small hint under the field spell
+  out that only numbers need to be typed.
+
 ## 1.30.0 — 2026-09-02
 
 - A reminder firing now also surfaces its note tab: it moves to the front

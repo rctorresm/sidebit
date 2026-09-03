@@ -62,7 +62,11 @@ const TEXT_SCALES = { small: 1.07, medium: 1.15, large: 1.3 };
 
 const MAX_TRASH = 50;
 
-let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_SETTINGS }, trash: [] };
+// Hosted separately (not bundled) so the "what changed" copy can be edited
+// any time without shipping a new extension version just to fix a typo.
+const WHATS_NEW_URL = "https://claude.ai/code/artifact/562fea3a-25c0-4817-aca3-781656e60ca6";
+
+let state = { tabs: [], activeTabId: null, snippets: [], settings: { ...DEFAULT_SETTINGS }, trash: [], hasUnseenUpdate: false };
 let editingSnippets = false;
 let notesSaveTimer = null;
 let dragSrcId = null;
@@ -93,6 +97,8 @@ const el = {
   notesCounter: document.getElementById("notesCounter"),
   saveIndicator: document.getElementById("saveIndicator"),
   clearNotesBtn: document.getElementById("clearNotesBtn"),
+  updatesBtn: document.getElementById("updatesBtn"),
+  updatesBadge: document.getElementById("updatesBadge"),
   settingsBtn: document.getElementById("settingsBtn"),
   settingsModal: document.getElementById("settingsModal"),
   closeSettingsBtn: document.getElementById("closeSettingsBtn"),
@@ -155,12 +161,13 @@ async function persist(partial) {
 }
 
 async function loadState() {
-  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets", "settings", "trash"]);
+  const data = await chrome.storage.local.get(["tabs", "activeTabId", "snippets", "settings", "trash", "hasUnseenUpdate"]);
   state.tabs = data.tabs || [];
   state.activeTabId = data.activeTabId || (state.tabs[0] && state.tabs[0].id) || null;
   state.snippets = data.snippets || [];
   state.settings = Object.assign({ ...DEFAULT_SETTINGS }, data.settings || {});
   state.trash = data.trash || [];
+  state.hasUnseenUpdate = !!data.hasUnseenUpdate;
   applyLanguage(state.settings.language);
   renderAll();
   applyTheme(state.settings.theme);
@@ -191,6 +198,7 @@ chrome.storage.onChanged.addListener((changes, area) => {
   if (changes.activeTabId) state.activeTabId = changes.activeTabId.newValue;
   if (changes.snippets) state.snippets = changes.snippets.newValue || [];
   if (changes.trash) state.trash = changes.trash.newValue || [];
+  if (changes.hasUnseenUpdate) state.hasUnseenUpdate = !!changes.hasUnseenUpdate.newValue;
   if (changes.settings) {
     state.settings = Object.assign({ ...DEFAULT_SETTINGS }, changes.settings.newValue || {});
     applyLanguage(state.settings.language);
@@ -210,7 +218,20 @@ function renderAll() {
   renderScreenshots();
   renderSettingsUI();
   renderTrash();
+  renderUpdatesBadge();
 }
+
+function renderUpdatesBadge() {
+  el.updatesBadge.classList.toggle("hidden", !state.hasUnseenUpdate);
+}
+
+el.updatesBtn.addEventListener("click", async () => {
+  window.open(WHATS_NEW_URL, "_blank", "noopener");
+  if (state.hasUnseenUpdate) {
+    await persist({ hasUnseenUpdate: false });
+    renderUpdatesBadge();
+  }
+});
 
 /* ---------------- Trash (recently deleted) ---------------- */
 
@@ -883,6 +904,15 @@ function parseTypedTime(raw) {
   return { hour, minute };
 }
 
+// Right-anchors the last two typed digits as minutes, same as parseTypedTime
+// above interprets them — so the live display never disagrees with what
+// typing "915" or "1030" actually saves as. No colon until there's a 3rd
+// digit, since with only 1-2 digits it's still ambiguous whether the hour
+// is done or minutes just haven't started yet.
+function formatTypedTimeDisplay(digits) {
+  return digits.length >= 3 ? `${digits.slice(0, -2)}:${digits.slice(-2)}` : digits;
+}
+
 function syncReminderAmPmButtons() {
   [...el.reminderAmPmChoices.children].forEach(btn => {
     btn.classList.toggle("active", btn.dataset.ampm === reminderAmPm);
@@ -911,7 +941,7 @@ function openReminderModal(tabId) {
   el.reminderModalHeading.textContent = t("reminder.heading");
   el.reminderDateInput.min = toDateInputValue(now);
   el.reminderDateInput.value = toDateInputValue(datePart);
-  el.reminderTimeInput.value = hour12 != null ? `${hour12}${pad2(minute)}` : "";
+  el.reminderTimeInput.value = hour12 != null ? formatTypedTimeDisplay(`${hour12}${pad2(minute)}`) : "";
   reminderAmPm = ampm;
   syncReminderAmPmButtons();
   el.reminderStatus.textContent = "";
@@ -927,7 +957,8 @@ function closeReminderModal() {
 }
 
 el.reminderTimeInput.addEventListener("input", () => {
-  el.reminderTimeInput.value = el.reminderTimeInput.value.replace(/\D/g, "").slice(0, 4);
+  const digits = el.reminderTimeInput.value.replace(/\D/g, "").slice(0, 4);
+  el.reminderTimeInput.value = formatTypedTimeDisplay(digits);
 });
 el.reminderTimeInput.addEventListener("keydown", e => {
   if (e.key === "Enter") el.saveReminderBtn.click();
