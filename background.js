@@ -52,6 +52,11 @@ chrome.runtime.onInstalled.addListener(async details => {
         // another extension's page, etc.) — skip it silently.
       }
     }
+
+    // Lights up the "what's new" badge in the header — cleared the moment
+    // someone clicks it. A fresh install has nothing to announce, so this
+    // only fires for an actual update.
+    await chrome.storage.local.set({ hasUnseenUpdate: true });
   }
 });
 

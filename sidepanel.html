@@ -12,6 +12,16 @@
       <div id="searchResults" class="search-results hidden"></div>
     </div>
     <div class="header-actions">
+      <button class="icon-btn" id="updatesBtn" data-i18n-title="updates.title" title="What's new">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 12v10H4V12"></path>
+          <path d="M2 7h20v5H2z"></path>
+          <path d="M12 22V7"></path>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"></path>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C9 2 12 7 12 7z"></path>
+        </svg>
+        <span id="updatesBadge" class="update-badge hidden"></span>
+      </button>
       <button class="icon-btn" id="settingsBtn" data-i18n-title="settings.title" title="Settings">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"></circle>
@@ -243,12 +253,13 @@
       <div class="reminder-field">
         <label class="settings-label" for="reminderTimeInput" data-i18n="reminder.timeLabel">Time</label>
         <div class="reminder-time-row">
-          <input type="text" id="reminderTimeInput" inputmode="numeric" maxlength="4" data-i18n-placeholder="reminder.timePlaceholder" placeholder="e.g. 915" />
+          <input type="text" id="reminderTimeInput" inputmode="numeric" maxlength="5" data-i18n-placeholder="reminder.timePlaceholder" placeholder="9:15" />
           <div class="choice-row reminder-ampm" id="reminderAmPmChoices">
             <button type="button" class="choice-btn" data-ampm="AM">AM</button>
             <button type="button" class="choice-btn" data-ampm="PM">PM</button>
           </div>
         </div>
+        <div class="reminder-time-hint" data-i18n="reminder.timeHint">Just type the numbers — 915 becomes 9:15</div>
       </div>
       <div id="reminderStatus" class="status-text"></div>
       <div class="reminder-actions">
